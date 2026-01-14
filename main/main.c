@@ -47,11 +47,11 @@ void app_main(void)
 
     lcdFillScreen(&dev, BLACK);
 
-    extern const uint8_t[] sara_image GET_EMBED_FILE(sara, bin);
+    extern const uint8_t sara_image[] GET_EMBED_FILE(sara, bin);
 
     for (int i = 0; i < LCD_HEIGHT; ++i)
     {
-        lcdDrawMultiPixels(&dev, 0, i, LCD_WIDTH, (uint16_t*)image + i * LCD_WIDTH);
+        lcdDrawMultiPixels(&dev, 0, i, LCD_WIDTH, (uint16_t*)sara_image + i * LCD_WIDTH);
     }
 
     while (true) {
