@@ -10,42 +10,54 @@
 
 #include "sdkconfig.h"
 
+#define LCD_VCC_PIN_NUM (CONFIG_LCD_VCC_PIN_NUM)
+#define LCD_SCK_PIN_NUM (CONFIG_SCLK_GPIO)
+#define LCD_SDA_PIN_NUM (CONFIG_MOSI_GPIO)
+#define LCD_RES_PIN_NUM (CONFIG_RESET_GPIO)
+#define LCD_DC_PIN_NUM  (CONFIG_DC_GPIO)
+#define LCD_BLK_PIN_NUM (CONFIG_BL_GPIO)
+#define LCD_CS_PIN_NUM  (CONFIG_CS_GPIO)
 
-#define LCD_VCC_GPIO_NUM (GPIO_NUM_1)
-#define LCD_DC_GPIO_NUM (GPIO_NUM_3)
-#define LCD_SCK_GPIO_NUM (GPIO_NUM_4)
-#define LCD_SDA_GPIO_NUM (GPIO_NUM_6)
-#define LCD_RES_GPIO_NUM (GPIO_NUM_10)
-#define LCD_BLK_GPIO_NUM (GPIO_NUM_5)
-
-#define LCD_WIDTH (240)
-#define LCD_HEIGHT (240)
+#define LCD_WIDTH (CONFIG_WIDTH)
+#define LCD_HEIGHT (CONFIG_HEIGHT)
 
 #define GET_EMBED_FILE(name, format) asm("_binary_" #name "_" #format "_start");
 
-static void screen_task_impl(void*);
+static void screen_task_impl(void* _args);
 
 BaseType_t start_screen_task(TaskHandle_t* const task_handle)
 {
-    return xTaskCreate(screen_task_impl,
-                "screen_task",
-                configMINIMAL_STACK_SIZE,
-                NULL,
-                tskIDLE_PRIORITY,
-                task_handle);
+    return xTaskCreate(
+        screen_task_impl,
+        "screen_task",
+        configMINIMAL_STACK_SIZE,
+        NULL,
+        tskIDLE_PRIORITY,
+        task_handle
+    );
 }
 
-void screen_task_impl(void*)
+static void screen_task_impl(void* _args)
 {
-    gpio_set_direction(LCD_VCC_GPIO_NUM, GPIO_MODE_OUTPUT);
-    gpio_set_level(LCD_VCC_GPIO_NUM, 1);
+#if LCD_VCC_PIN_NUM != -1
+    gpio_set_direction(LCD_VCC_PIN_NUM, GPIO_MODE_OUTPUT);
+    gpio_set_level(LCD_VCC_PIN_NUM, 1);
+#endif
 
     TFT_t dev;
 
-	spi_master_init(&dev, LCD_SDA_GPIO_NUM, LCD_SCK_GPIO_NUM, -1, LCD_DC_GPIO_NUM, LCD_RES_GPIO_NUM, -1);
+	spi_master_init(
+        &dev, 
+        LCD_SDA_PIN_NUM,
+        LCD_SCK_PIN_NUM,
+        LCD_CS_PIN_NUM,
+        LCD_DC_PIN_NUM,
+        LCD_RES_PIN_NUM,
+        LCD_BLK_PIN_NUM
+    );
 	lcdInit(&dev, LCD_WIDTH, LCD_HEIGHT, 0, 0);
 
-    lcdFillScreen(&dev, BLACK);
+    // lcdFillScreen(&dev, BLACK);
 
     while (true) {
         //Drawing images
