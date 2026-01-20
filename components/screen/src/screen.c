@@ -6,6 +6,8 @@
 
 #include "st7789.h"
 
+#include "gif.h"
+
 #include "sdkconfig.h"
 
 
