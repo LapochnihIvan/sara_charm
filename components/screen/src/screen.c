@@ -1,6 +1,8 @@
 #include "screen.h"
 
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #include "driver/gpio.h"
 
@@ -10,21 +12,23 @@
 
 #include "sdkconfig.h"
 
-#define LCD_VCC_PIN_NUM (CONFIG_LCD_VCC_PIN_NUM)
-#define LCD_SCK_PIN_NUM (CONFIG_SCLK_GPIO)
-#define LCD_SDA_PIN_NUM (CONFIG_MOSI_GPIO)
-#define LCD_RES_PIN_NUM (CONFIG_RESET_GPIO)
-#define LCD_DC_PIN_NUM  (CONFIG_DC_GPIO)
-#define LCD_BLK_PIN_NUM (CONFIG_BL_GPIO)
-#define LCD_CS_PIN_NUM  (CONFIG_CS_GPIO)
+#include "embed_file_util.h"
+
+
+#define LCD_VCC_PIN_NUM ((int16_t)CONFIG_LCD_VCC_PIN_NUM)
+#define LCD_SCK_PIN_NUM ((int16_t)CONFIG_SCLK_GPIO)
+#define LCD_SDA_PIN_NUM ((int16_t)CONFIG_MOSI_GPIO)
+#define LCD_RES_PIN_NUM ((int16_t)CONFIG_RESET_GPIO)
+#define LCD_DC_PIN_NUM  ((int16_t)CONFIG_DC_GPIO)
+#define LCD_BLK_PIN_NUM ((int16_t)CONFIG_BL_GPIO)
+#define LCD_CS_PIN_NUM  ((int16_t)CONFIG_CS_GPIO)
 
 #define LCD_WIDTH (CONFIG_WIDTH)
 #define LCD_HEIGHT (CONFIG_HEIGHT)
 
-#define GET_EMBED_FILE(name, format) asm("_binary_" #name "_" #format "_start");
-
 static void screen_task_impl(void* _args);
 static void init_lcd(TFT_t* const lcd);
+static void gif_draw_callback(GIFDRAW* img_line);
 
 BaseType_t start_screen_task(TaskHandle_t* const task_handle)
 {
@@ -40,13 +44,16 @@ BaseType_t start_screen_task(TaskHandle_t* const task_handle)
 
 static void screen_task_impl(void* _args)
 {
-#if LCD_VCC_PIN_NUM != -1
+#if CONFIG_LCD_VCC_PIN_NUM != -1
     gpio_set_direction(LCD_VCC_PIN_NUM, GPIO_MODE_OUTPUT);
     gpio_set_level(LCD_VCC_PIN_NUM, 1);
 #endif
 
     TFT_t lcd;
     init_lcd(&lcd);
+
+    EXTERN_EMBED_FILE(sara, gif);
+    embed_file_t sara_gif = GET_EMBED_FILE(sara, gif);
 
     while (true) {
         //Drawing images
