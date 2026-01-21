@@ -1,12 +1,9 @@
 #include "st7789_driver.h"
-#include "esp_err.h"
-#include "portmacro.h"
 
 #include <driver/gpio.h>
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#include <stdint.h>
 
 
 #define VCC_PIN_NUM ((gpio_num_t)CONFIG_ST7789_VCC_PIN_NUM)
@@ -53,6 +50,7 @@ typedef enum lcd_command {
     DisplayOn            = 0x29,
     SetColumnAddr        = 0x2A,
     SetRowAddr           = 0x2B,
+    WriteMemory          = 0x2C,
     SetMemDataAccessCtrl = 0x36,
     SetPixelFormat       = 0x3A,
 } lcd_command_t;
@@ -61,6 +59,15 @@ static void gpio_init(void);
 static void spi_init(spi_device_handle_t* spi_handle);
 static void lcd_send_command(spi_device_handle_t spi_handle,
                              lcd_command_t command);
+static void lcd_send_addr(spi_device_handle_t spi_handle,
+                          uint16_t begin,
+                          uint16_t end);
+static void lcd_send_colors(spi_device_handle_t spi_handle,
+                            const uint16_t* colors,
+                            const uint16_t len);
+static void lcd_send_data(spi_device_handle_t spi_handle,
+                          const void* data,
+                          uint16_t num_bytes);
 static void lcd_send_data_byte(spi_device_handle_t spi_handle,
                                uint8_t data);
 static void spi_send(spi_device_handle_t spi_handle,
@@ -69,6 +76,7 @@ static void spi_send(spi_device_handle_t spi_handle,
 static void spi_send_byte(spi_device_handle_t spi_handle,
                           uint8_t data);
 static inline void delay_ms(uint16_t num_ms);
+static inline uint16_t swap_bytes(uint16_t num);
 
 void st7789_init(spi_device_handle_t* const spi_handle)
 {
@@ -92,6 +100,25 @@ void st7789_init(spi_device_handle_t* const spi_handle)
 	lcd_send_command(*spi_handle, NormalDisplayModeOn);
 	lcd_send_command(*spi_handle, DisplayOn);
 	delay_ms(DISPLAY_ON_DELAY_MS);
+}
+
+void st7789_draw_multicolor_line(const spi_device_handle_t spi_handle,
+                                 const uint16_t x_offset,
+                                 const uint16_t y,
+                                 const uint16_t width,
+                                 const uint16_t* const colors)
+{
+    lcd_send_command(spi_handle, SetColumnAddr);
+    lcd_send_addr(spi_handle, x_offset, x_offset + width - 1);
+    lcd_send_command(spi_handle, SetRowAddr);
+    lcd_send_addr(spi_handle, y, y);
+    lcd_send_command(spi_handle, WriteMemory);
+    lcd_send_colors(spi_handle, colors, width);
+}
+
+uint16_t st7789_color_from_le(const uint16_t color)
+{
+    return swap_bytes(color);
 }
 
 static void gpio_init(void)
@@ -141,7 +168,7 @@ static void spi_init(spi_device_handle_t* const spi_handle)
 
 	spi_device_interface_config_t devcfg = {0};
 	devcfg.clock_speed_hz = SPI_FREQ;
-	devcfg.queue_size = 7;
+	devcfg.queue_size = CONFIG_ST7789_SPI_QUEUE_SIZE;
 	devcfg.mode = 3;
 	devcfg.flags = SPI_DEVICE_NO_DUMMY;
     devcfg.spics_io_num = CS_PIN_NUM;
@@ -156,14 +183,41 @@ static void lcd_send_command(const spi_device_handle_t spi_handle,
     spi_send_byte(spi_handle, (uint8_t)command);
 }
 
-static void lcd_send_data_byte(spi_device_handle_t spi_handle,
-                               uint8_t data)
+static void lcd_send_addr(const spi_device_handle_t spi_handle,
+                          uint16_t begin,
+                          uint16_t end)
 {
-    gpio_set_level(DC_PIN_NUM, DC_DATA_LEVEl);
-    spi_send_byte(spi_handle, data);
+    begin = swap_bytes(begin);
+    end = swap_bytes(end);
+    lcd_send_data(
+        spi_handle,
+        (const void*)(uint16_t[]){begin, end},
+        2 * sizeof(uint16_t)
+    );
 }
 
-static void spi_send(spi_device_handle_t spi_handle,
+static void lcd_send_colors(const spi_device_handle_t spi_handle,
+                            const uint16_t* const colors,
+                            const uint16_t len)
+{
+    lcd_send_data(spi_handle, (const void*)colors, len * sizeof(uint16_t));
+}
+
+static void lcd_send_data(const spi_device_handle_t spi_handle,
+                          const void* const data,
+                          const uint16_t num_bytes)
+{
+    gpio_set_level(DC_PIN_NUM, DC_DATA_LEVEl);
+    spi_send(spi_handle, data, num_bytes);
+}
+
+static void lcd_send_data_byte(const spi_device_handle_t spi_handle,
+                               const uint8_t data)
+{
+    lcd_send_data(spi_handle, (const void*)&data, sizeof(uint8_t));
+}
+
+static void spi_send(const spi_device_handle_t spi_handle,
                      const void* const data,
                      const uint16_t num_bytes)
 {
@@ -182,4 +236,9 @@ static void spi_send_byte(const spi_device_handle_t spi_handle,
 static inline void delay_ms(const uint16_t num_ms)
 {
     vTaskDelay(pdMS_TO_TICKS(num_ms));
+}
+
+static inline uint16_t swap_bytes(const uint16_t num)
+{
+    return ((num & 0xFF) << BITS_IN_BYTE) | (num >> BITS_IN_BYTE);
 }

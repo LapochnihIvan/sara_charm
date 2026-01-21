@@ -1,8 +1,0 @@
-menu "LCD configuration"
-    config LCD_VCC_PIN_NUM
-        int "VCC pin"
-        range -1 GPIO_RANGE_MAX
-        default -1
-        help
-            Pin number for screen power
-endmenu

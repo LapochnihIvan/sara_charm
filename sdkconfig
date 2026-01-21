@@ -495,29 +495,23 @@ CONFIG_PARTITION_TABLE_MD5=y
 # end of Partition Table
 
 #
-# LCD configuration
+# ST7789 driver configuration
 #
-CONFIG_LCD_VCC_PIN_NUM=1
-# end of LCD configuration
-
-#
-# ST7789 Configuration
-#
-CONFIG_GPIO_RANGE_MAX=19
-CONFIG_WIDTH=240
-CONFIG_HEIGHT=240
-CONFIG_OFFSETX=0
-CONFIG_OFFSETY=0
-CONFIG_MOSI_GPIO=6
-CONFIG_SCLK_GPIO=4
-CONFIG_CS_GPIO=-1
-CONFIG_DC_GPIO=3
-CONFIG_RESET_GPIO=10
-CONFIG_BL_GPIO=-1
-# CONFIG_INVERSION is not set
-CONFIG_SPI2_HOST=y
-# CONFIG_FRAME_BUFFER is not set
-# end of ST7789 Configuration
+CONFIG_MAX_GPIO_NUM=19
+CONFIG_ST7789_VCC_PIN_NUM=1
+CONFIG_ST7789_SCK_PIN_NUM=4
+CONFIG_ST7789_SDA_PIN_NUM=6
+CONFIG_ST7789_RES_PIN_NUM=10
+CONFIG_ST7789_DC_PIN_NUM=3
+CONFIG_ST7789_BLK_PIN_NUM=-1
+CONFIG_ST7789_CS_PIN_NUM=-1
+CONFIG_ST7789_SCREEN_WIDTH=240
+CONFIG_ST7789_SCREEN_HEIGHT=240
+CONFIG_ST7789_SPI2_HOST=y
+CONFIG_ST7789_SPI_FREQ_20_MHZ=y
+# CONFIG_ST7789_SPI_FREQ_40_MHZ is not set
+CONFIG_ST7789_SPI_QUEUE_SIZE=7
+# end of ST7789 driver configuration
 
 #
 # Compiler options
@@ -572,72 +566,6 @@ CONFIG_COMPILER_ORPHAN_SECTIONS_WARNING=y
 #
 
 #
-# Driver Configurations
-#
-
-#
-# Legacy TWAI Driver Configurations
-#
-# CONFIG_TWAI_SKIP_LEGACY_CONFLICT_CHECK is not set
-CONFIG_TWAI_ERRATA_FIX_LISTEN_ONLY_DOM=y
-# end of Legacy TWAI Driver Configurations
-
-#
-# Legacy ADC Driver Configuration
-#
-# CONFIG_ADC_SUPPRESS_DEPRECATE_WARN is not set
-# CONFIG_ADC_SKIP_LEGACY_CONFLICT_CHECK is not set
-
-#
-# Legacy ADC Calibration Configuration
-#
-# CONFIG_ADC_CALI_SUPPRESS_DEPRECATE_WARN is not set
-# end of Legacy ADC Calibration Configuration
-# end of Legacy ADC Driver Configuration
-
-#
-# Legacy Timer Group Driver Configurations
-#
-# CONFIG_GPTIMER_SUPPRESS_DEPRECATE_WARN is not set
-# CONFIG_GPTIMER_SKIP_LEGACY_CONFLICT_CHECK is not set
-# end of Legacy Timer Group Driver Configurations
-
-#
-# Legacy RMT Driver Configurations
-#
-# CONFIG_RMT_SUPPRESS_DEPRECATE_WARN is not set
-# CONFIG_RMT_SKIP_LEGACY_CONFLICT_CHECK is not set
-# end of Legacy RMT Driver Configurations
-
-#
-# Legacy I2S Driver Configurations
-#
-# CONFIG_I2S_SUPPRESS_DEPRECATE_WARN is not set
-# CONFIG_I2S_SKIP_LEGACY_CONFLICT_CHECK is not set
-# end of Legacy I2S Driver Configurations
-
-#
-# Legacy I2C Driver Configurations
-#
-# CONFIG_I2C_SKIP_LEGACY_CONFLICT_CHECK is not set
-# end of Legacy I2C Driver Configurations
-
-#
-# Legacy SDM Driver Configurations
-#
-# CONFIG_SDM_SUPPRESS_DEPRECATE_WARN is not set
-# CONFIG_SDM_SKIP_LEGACY_CONFLICT_CHECK is not set
-# end of Legacy SDM Driver Configurations
-
-#
-# Legacy Temperature Sensor Driver Configurations
-#
-# CONFIG_TEMP_SENSOR_SUPPRESS_DEPRECATE_WARN is not set
-# CONFIG_TEMP_SENSOR_SKIP_LEGACY_CONFLICT_CHECK is not set
-# end of Legacy Temperature Sensor Driver Configurations
-# end of Driver Configurations
-
-#
 # eFuse Bit Manager
 #
 # CONFIG_EFUSE_CUSTOM_TABLE is not set
@@ -658,59 +586,6 @@ CONFIG_ESP_ERR_TO_NAME_LOOKUP=y
 # end of ESP-Driver:GPIO Configurations
 
 #
-# ESP-Driver:GPTimer Configurations
-#
-CONFIG_GPTIMER_ISR_HANDLER_IN_IRAM=y
-# CONFIG_GPTIMER_CTRL_FUNC_IN_IRAM is not set
-# CONFIG_GPTIMER_ISR_CACHE_SAFE is not set
-CONFIG_GPTIMER_OBJ_CACHE_SAFE=y
-# CONFIG_GPTIMER_ENABLE_DEBUG_LOG is not set
-# end of ESP-Driver:GPTimer Configurations
-
-#
-# ESP-Driver:I2C Configurations
-#
-# CONFIG_I2C_ISR_IRAM_SAFE is not set
-# CONFIG_I2C_ENABLE_DEBUG_LOG is not set
-# CONFIG_I2C_ENABLE_SLAVE_DRIVER_VERSION_2 is not set
-CONFIG_I2C_MASTER_ISR_HANDLER_IN_IRAM=y
-# end of ESP-Driver:I2C Configurations
-
-#
-# ESP-Driver:I2S Configurations
-#
-# CONFIG_I2S_ISR_IRAM_SAFE is not set
-# CONFIG_I2S_ENABLE_DEBUG_LOG is not set
-# end of ESP-Driver:I2S Configurations
-
-#
-# ESP-Driver:LEDC Configurations
-#
-# CONFIG_LEDC_CTRL_FUNC_IN_IRAM is not set
-# end of ESP-Driver:LEDC Configurations
-
-#
-# ESP-Driver:RMT Configurations
-#
-CONFIG_RMT_ENCODER_FUNC_IN_IRAM=y
-CONFIG_RMT_TX_ISR_HANDLER_IN_IRAM=y
-CONFIG_RMT_RX_ISR_HANDLER_IN_IRAM=y
-# CONFIG_RMT_RECV_FUNC_IN_IRAM is not set
-# CONFIG_RMT_TX_ISR_CACHE_SAFE is not set
-# CONFIG_RMT_RX_ISR_CACHE_SAFE is not set
-CONFIG_RMT_OBJ_CACHE_SAFE=y
-# CONFIG_RMT_ENABLE_DEBUG_LOG is not set
-# CONFIG_RMT_ISR_IRAM_SAFE is not set
-# end of ESP-Driver:RMT Configurations
-
-#
-# ESP-Driver:Sigma Delta Modulator Configurations
-#
-# CONFIG_SDM_CTRL_FUNC_IN_IRAM is not set
-# CONFIG_SDM_ENABLE_DEBUG_LOG is not set
-# end of ESP-Driver:Sigma Delta Modulator Configurations
-
-#
 # ESP-Driver:SPI Configurations
 #
 # CONFIG_SPI_MASTER_IN_IRAM is not set
@@ -718,41 +593,6 @@ CONFIG_SPI_MASTER_ISR_IN_IRAM=y
 # CONFIG_SPI_SLAVE_IN_IRAM is not set
 CONFIG_SPI_SLAVE_ISR_IN_IRAM=y
 # end of ESP-Driver:SPI Configurations
-
-#
-# ESP-Driver:Temperature Sensor Configurations
-#
-# CONFIG_TEMP_SENSOR_ENABLE_DEBUG_LOG is not set
-# end of ESP-Driver:Temperature Sensor Configurations
-
-#
-# ESP-Driver:TWAI Configurations
-#
-# CONFIG_TWAI_ISR_IN_IRAM is not set
-# CONFIG_TWAI_IO_FUNC_IN_IRAM is not set
-# CONFIG_TWAI_ISR_CACHE_SAFE is not set
-# CONFIG_TWAI_ENABLE_DEBUG_LOG is not set
-# end of ESP-Driver:TWAI Configurations
-
-#
-# ESP-Driver:UART Configurations
-#
-# CONFIG_UART_ISR_IN_IRAM is not set
-# end of ESP-Driver:UART Configurations
-
-#
-# ESP-Driver:UHCI Configurations
-#
-# CONFIG_UHCI_ISR_HANDLER_IN_IRAM is not set
-# CONFIG_UHCI_ISR_CACHE_SAFE is not set
-# CONFIG_UHCI_ENABLE_DEBUG_LOG is not set
-# end of ESP-Driver:UHCI Configurations
-
-#
-# ESP-Driver:USB Serial/JTAG Configuration
-#
-CONFIG_USJ_ENABLE_USB_SERIAL_JTAG=y
-# end of ESP-Driver:USB Serial/JTAG Configuration
 
 #
 # Hardware Settings
@@ -888,12 +728,6 @@ CONFIG_PM_POWER_DOWN_CPU_IN_LIGHT_SLEEP=y
 # end of Power Management
 
 #
-# ESP Ringbuf
-#
-# CONFIG_RINGBUF_PLACE_FUNCTIONS_INTO_FLASH is not set
-# end of ESP Ringbuf
-
-#
 # ESP-ROM
 #
 CONFIG_ESP_ROM_PRINT_IN_IRAM=y
@@ -994,7 +828,7 @@ CONFIG_ESP_TIMER_IMPL_SYSTIMER=y
 #
 # CONFIG_FREERTOS_SMP is not set
 CONFIG_FREERTOS_UNICORE=y
-CONFIG_FREERTOS_HZ=100
+CONFIG_FREERTOS_HZ=1000
 CONFIG_FREERTOS_OPTIMIZED_SCHEDULER=y
 # CONFIG_FREERTOS_CHECK_STACKOVERFLOW_NONE is not set
 # CONFIG_FREERTOS_CHECK_STACKOVERFLOW_PTRVAL is not set
@@ -1405,7 +1239,6 @@ CONFIG_STACK_CHECK_NONE=y
 # CONFIG_STACK_CHECK_STRONG is not set
 # CONFIG_STACK_CHECK_ALL is not set
 # CONFIG_WARN_WRITE_STRINGS is not set
-# CONFIG_GPTIMER_ISR_IRAM_SAFE is not set
 # CONFIG_ESP_SYSTEM_PD_FLASH is not set
 CONFIG_ESP32C3_LIGHTSLEEP_GPIO_RESET_WORKAROUND=y
 CONFIG_ESP32C3_RTC_CLK_SRC_INT_RC=y

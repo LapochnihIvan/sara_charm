@@ -68,7 +68,7 @@ menu "ST7789 driver configuration"
 		help
 			The width resolution of the screen
 
-	config ST7789_SCREEN_WIDTH
+	config ST7789_SCREEN_HEIGHT
 		int "Screen height"
 		range 0 999
 		default 240
@@ -105,4 +105,10 @@ menu "ST7789 driver configuration"
 			help
 				Set 40 MHz SPI frequency
 	endchoice
+
+	config ST7789_SPI_QUEUE_SIZE
+		int "SPI queue size"
+		default 7
+		help
+			Size of queue of SPI transactions
 endmenu
