@@ -5,7 +5,7 @@
 #define EXTERN_EMBED_FILE(name, format)                                 \
     extern const uint8_t embed_file_ ## name ## _ ## format ## _begin[] \
         asm("_binary_" #name "_" #format "_start");                     \
-    extern const uint8_t* embed_file_ ## name ## _ ## format ## _end    \
+    extern const uint8_t embed_file_ ## name ## _ ## format ## _end[]   \
         asm("_binary_" #name "_" #format "_end")
 #define GET_EMBED_FILE(name, format)                           \
 {                                                              \
