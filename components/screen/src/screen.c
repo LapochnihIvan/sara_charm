@@ -53,9 +53,6 @@ static void screen_task_impl(void* _args)
     gpio_set_level(LCD_VCC_PIN_NUM, 1);
 #endif
 
-    TFT_t lcd;
-    init_lcd(&lcd);
-
     EXTERN_EMBED_FILE(sara, gif);
     embed_file_t sara_gif = GET_EMBED_FILE(sara, gif);
 
@@ -68,6 +65,8 @@ static void screen_task_impl(void* _args)
         gif_draw_callback
     );
 
+    TFT_t lcd;
+    init_lcd(&lcd);
     lcdFillScreen(&lcd, BLACK);
 
     while (true) {
