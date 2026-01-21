@@ -1,3 +1,7 @@
+#ifndef SARA_CHARM_SCREEN_EMBED_FILE_UTIL_H
+#define SARA_CHARM_SCREEN_EMBED_FILE_UTIL_H
+
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -18,3 +22,5 @@ typedef struct embed_file {
     const uint8_t* begin;
     size_t len;
 } embed_file_t;
+
+#endif //!SARA_CHARM_SCREEN_EMBED_FILE_UTIL_H
