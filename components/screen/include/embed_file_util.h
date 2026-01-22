@@ -18,7 +18,8 @@
         - embed_file_ ## name ## _ ## format ## _begin)        \
 }
 
-typedef struct embed_file {
+typedef struct embed_file
+{
     const uint8_t* begin;
     size_t len;
 } embed_file_t;

@@ -42,7 +42,8 @@
 
 #define BITS_IN_BYTE (CHAR_BIT)
 
-typedef enum lcd_command {
+typedef enum lcd_command
+{
     SoftwareReset        = 0x01,
     SleepOut             = 0x11,
     NormalDisplayModeOn  = 0x13,
@@ -167,11 +168,11 @@ static void spi_init(spi_device_handle_t* const spi_handle)
     spi_bus_initialize(SPI_HOST, &spi_conf, SPI_DMA_CH_AUTO);
 
 	spi_device_interface_config_t devcfg = {0};
-	devcfg.clock_speed_hz = SPI_FREQ;
-	devcfg.queue_size = CONFIG_ST7789_SPI_QUEUE_SIZE;
 	devcfg.mode = 3;
-	devcfg.flags = SPI_DEVICE_NO_DUMMY;
+	devcfg.clock_speed_hz = SPI_FREQ;
     devcfg.spics_io_num = CS_PIN_NUM;
+    devcfg.flags = SPI_DEVICE_NO_DUMMY;
+	devcfg.queue_size = CONFIG_ST7789_SPI_QUEUE_SIZE;
 
 	spi_bus_add_device(SPI2_HOST, &devcfg, spi_handle);
 }
