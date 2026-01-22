@@ -104,6 +104,10 @@ menu "ST7789 driver configuration"
 			bool "40 MHz"
 			help
 				Set 40 MHz SPI frequency
+		config ST7789_SPI_FREQ_80_MHZ
+			bool "80 MHz"
+			help
+				Set 80 MHz SPI frequency
 	endchoice
 
 	config ST7789_SPI_QUEUE_SIZE
