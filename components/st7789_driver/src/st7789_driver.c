@@ -10,7 +10,7 @@
 #define SDA_PIN_NUM ((gpio_num_t)CONFIG_ST7789_SDA_PIN_NUM)
 #define RES_PIN_NUM ((gpio_num_t)CONFIG_ST7789_RES_PIN_NUM)
 #define DC_PIN_NUM  ((gpio_num_t)CONFIG_ST7789_DC_PIN_NUM)
-#define BLK_PIN_NUM ((gpio_num_t)CONFIG_ST7789_SCK_PIN_NUM)
+#define BLK_PIN_NUM ((gpio_num_t)CONFIG_ST7789_BLK_PIN_NUM)
 #define CS_PIN_NUM  ((gpio_num_t)CONFIG_ST7789_CS_PIN_NUM)
 
 #ifdef CONFIG_ST7789_SPI2_HOST
@@ -118,6 +118,10 @@ void st7789_init(st7789_control_t* const self)
 
 	lcd_send_command_sync(self, DisplayInversionOn);
 	lcd_send_command_sync(self, NormalDisplayModeOn);
+
+#if CONFIG_ST7789_BLK_PIN_NUM != NOT_USED_PIN
+    gpio_set_level(BLK_PIN_NUM, 1);
+#endif //CONFIG_ST7789_BLK_PIN_NUM != -1
 }
 
 void st7789_display_on(st7789_control_t* const self)
