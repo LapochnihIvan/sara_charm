@@ -1,6 +1,5 @@
 #include "st7789_driver.h"
 
-#include <stdint.h>
 #include <string.h>
 
 #include <driver/gpio.h>
@@ -127,6 +126,16 @@ void st7789_display_on(st7789_control_t* const self)
     delay_ms(DISPLAY_ON_DELAY_MS);
 }
 
+void st7789_enable_drawing_notify(st7789_control_t* const self)
+{
+    self->_notify.notify_task_handle = xTaskGetCurrentTaskHandle();
+}
+
+void st7789_disable_drawing_notify(st7789_control_t* const self)
+{
+    self->_notify.notify_task_handle = NULL;
+}
+
 void st7789_wait_drawing(void)
 {
     lcd_wait_sending();
@@ -216,16 +225,17 @@ static void spi_init(spi_device_handle_t* const spi_handle)
 
 static void tx_queue_init(st7789_control_t* const self)
 {
-    self->_notify_task_handle = xTaskGetCurrentTaskHandle();
+    self->_notify.notify_task_handle = NULL;
+    self->_notify.num_packets_in_process = 0;
 
     st7789_packet_t* packet = self->_tx_queue;
     const st7789_packet_t* const last_packet = packet + ST7789_TX_QUEUE_SIZE;
     for (; packet != last_packet; ++packet)
     {
-        packet->_spi_transaction = (spi_transaction_t){0};
-        packet->_spi_transaction.tx_buffer = packet->_tx_buf;
-        packet->ctx._notify_task_handle = &self->_notify_task_handle;
-        packet->_spi_transaction.user = (void*)&packet->ctx;
+        packet->spi_transaction = (spi_transaction_t){0};
+        packet->spi_transaction.tx_buffer = packet->tx_buf;
+        packet->ctx.notify = &self->_notify;
+        packet->spi_transaction.user = (void*)&packet->ctx;
     }
     self->_cur_packet = self->_tx_queue;
 }
@@ -233,7 +243,7 @@ static void tx_queue_init(st7789_control_t* const self)
 static void lcd_send_command(st7789_control_t* const self,
                              const lcd_command_t command)
 {
-    self->_cur_packet->ctx._dc_level = DC_COMMAND_LEVEl;
+    self->_cur_packet->ctx.dc_level = DC_COMMAND_LEVEl;
     lcd_send_byte(self, (uint8_t)command);
 }
 
@@ -270,15 +280,15 @@ static void lcd_send_color_line(st7789_control_t* const self,
 
     st7789_packet_t* const packet = self->_cur_packet;
     const uint16_t tx_len = ST7789_SCREEN_WIDTH * sizeof(uint16_t);
-    const uint8_t* const last_tx_byte = packet->_tx_buf + tx_len;
-    for (uint8_t* tx_byte = packet->_tx_buf;
+    const uint8_t* const last_tx_byte = packet->tx_buf + tx_len;
+    for (uint8_t* tx_byte = packet->tx_buf;
         tx_byte != last_tx_byte;
         tx_byte += sizeof(uint16_t))
     {
         *tx_byte = (uint8_t)(color >> BITS_IN_BYTE);
         *(tx_byte + 1) = (uint8_t)(color & 0xFF);
     }
-    packet->_spi_transaction.length = tx_len * BITS_IN_BYTE;
+    packet->spi_transaction.length = tx_len * BITS_IN_BYTE;
 
     lcd_send_impl(self);
 }
@@ -300,7 +310,7 @@ static void lcd_send_data(st7789_control_t* const self,
                           const void* const data,
                           const uint16_t num_bytes)
 {
-    self->_cur_packet->ctx._dc_level = DC_DATA_LEVEl;
+    self->_cur_packet->ctx.dc_level = DC_DATA_LEVEl;
     lcd_send(self, data, num_bytes);
 }
 
@@ -315,8 +325,8 @@ static void lcd_send(st7789_control_t* const self,
                      const uint16_t num_bytes)
 {
     st7789_packet_t* const packet = self->_cur_packet;
-    memcpy(packet->_tx_buf, data, num_bytes);
-    packet->_spi_transaction.length = num_bytes * BITS_IN_BYTE;
+    memcpy(packet->tx_buf, data, num_bytes);
+    packet->spi_transaction.length = num_bytes * BITS_IN_BYTE;
 
     lcd_send_impl(self);
 }
@@ -329,7 +339,7 @@ static void lcd_send_byte(st7789_control_t* const self,
 
 static void lcd_send_impl(st7789_control_t* const self)
 {
-    spi_transaction_t* const spi_transaction = &self->_cur_packet->_spi_transaction;
+    spi_transaction_t* const spi_transaction = &self->_cur_packet->spi_transaction;
     spi_transaction->rxlength = 0;
     spi_device_queue_trans(self->_spi_handle, spi_transaction, portMAX_DELAY);
 
@@ -347,8 +357,8 @@ static void lcd_send_byte_sync(const spi_device_handle_t spi_handle,
     spi_transaction_t spi_transaction = {0};
     spi_transaction.length = sizeof(uint8_t) * BITS_IN_BYTE;
     st7789_packet_ctx_t ctx = {
-        ._dc_level = dc_level,
-        ._notify_task_handle = NULL
+        .dc_level = dc_level,
+        .notify = NULL
     };
     spi_transaction.user = (void*)&ctx;
     spi_transaction.tx_buffer = (void*)&byte;
@@ -363,18 +373,35 @@ static void lcd_wait_sending(void)
 
 static void spi_pre_callback(spi_transaction_t* const transaction)
 {
-    const uint8_t dc_level =
-        ((st7789_packet_ctx_t*)transaction->user)->_dc_level;
-    gpio_set_level(DC_PIN_NUM, dc_level);
+    const st7789_packet_ctx_t* const ctx =
+        (st7789_packet_ctx_t*)transaction->user;
+
+    gpio_set_level(DC_PIN_NUM, ctx->dc_level);
+
+    if (ctx->notify == NULL)
+    {
+        return;
+    }
+
+    ++ctx->notify->num_packets_in_process;
 }
 
 static void spi_post_callback(spi_transaction_t* const transaction)
 {
-    const TaskHandle_t* task_handle =
-        ((st7789_packet_ctx_t*)transaction->user)->_notify_task_handle;
-    if (task_handle != NULL)
+    const st7789_packet_ctx_t* const ctx =
+        (st7789_packet_ctx_t*)transaction->user;
+
+    if (ctx->notify == NULL)
     {
-        vTaskNotifyGiveFromISR(*task_handle, NULL);
+        return;
+    }    
+
+    --ctx->notify->num_packets_in_process;
+
+    const TaskHandle_t task_handle = ctx->notify->notify_task_handle;
+    if (task_handle != NULL && ctx->notify->num_packets_in_process == 0)
+    {
+        vTaskNotifyGiveFromISR(task_handle, NULL);
     }
 }
 

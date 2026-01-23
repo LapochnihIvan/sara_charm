@@ -15,17 +15,23 @@
 
 #define ST7789_TX_QUEUE_SIZE (CONFIG_ST7789_SPI_QUEUE_SIZE + 1)
 
+typedef struct st7789_done_notify
+{
+    TaskHandle_t notify_task_handle;
+    uint8_t num_packets_in_process;
+} st7789_done_notify_t;
+
 typedef struct st7789_packet_ctx
 {
-    uint8_t _dc_level;
-    TaskHandle_t* _notify_task_handle;
+    uint8_t dc_level;
+    st7789_done_notify_t* notify;
 
 } st7789_packet_ctx_t;
 
 typedef struct st7789_packet
 {
-    spi_transaction_t _spi_transaction;
-    uint8_t _tx_buf[CONFIG_ST7789_SCREEN_WIDTH * sizeof(uint16_t)];
+    spi_transaction_t spi_transaction;
+    uint8_t tx_buf[CONFIG_ST7789_SCREEN_WIDTH * sizeof(uint16_t)];
     st7789_packet_ctx_t ctx;
 } st7789_packet_t;
 
@@ -34,11 +40,13 @@ typedef struct st7789_control
     spi_device_handle_t _spi_handle;
     st7789_packet_t _tx_queue[ST7789_TX_QUEUE_SIZE];
     st7789_packet_t* _cur_packet;
-    TaskHandle_t _notify_task_handle;
+    st7789_done_notify_t _notify;
 } st7789_control_t;
 
 void st7789_init(st7789_control_t* self);
 void st7789_display_on(st7789_control_t* self);
+void st7789_enable_drawing_notify(st7789_control_t* self);
+void st7789_disable_drawing_notify(st7789_control_t* self);
 void st7789_wait_drawing(void);
 void st7789_fill_screen(st7789_control_t* self, uint16_t color);
 void st7789_draw_multicolor_line(st7789_control_t* self,

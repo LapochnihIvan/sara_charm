@@ -43,8 +43,11 @@ static void screen_task_impl(void* _args)
     st7789_control_t lcd;
     st7789_init(&lcd);
 
+    st7789_enable_drawing_notify(&lcd);
     st7789_fill_screen(&lcd, ST7789_BLACK_COLOR);
     st7789_wait_drawing();
+    st7789_disable_drawing_notify(&lcd);
+
     st7789_display_on(&lcd);
 
     while (true) {
