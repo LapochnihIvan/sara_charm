@@ -11,6 +11,8 @@
 #define ST7789_SCREEN_WIDTH  ((uint16_t)CONFIG_ST7789_SCREEN_WIDTH)
 #define ST7789_SCREEN_HEIGHT ((uint16_t)CONFIG_ST7789_SCREEN_HEIGHT)
 
+#define ST7789_BLACK_COLOR ((uint16_t)0x0000)
+
 #define ST7789_TX_QUEUE_SIZE (CONFIG_ST7789_SPI_QUEUE_SIZE + 1)
 
 typedef struct st7789_packet_ctx
@@ -44,6 +46,5 @@ void st7789_draw_multicolor_line(st7789_control_t* self,
                                  uint16_t width,
                                  const uint16_t* colors);
 uint16_t st7789_color_from_le(uint16_t color);
-
 
 #endif //!SARA_CHARM_ST7789_DRIVER_ST7789_DRIVER_H
