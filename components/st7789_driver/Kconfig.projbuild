@@ -17,7 +17,7 @@ menu "ST7789 driver configuration"
 		range -1 MAX_GPIO_NUM
 		default -1
 		help
-			ST7789 power pin number
+			ST7789 power pin number. Set -1 if pin not used
 
 	config ST7789_SCK_PIN_NUM
 		int "SCK pin"
@@ -38,7 +38,7 @@ menu "ST7789 driver configuration"
 		range -1 MAX_GPIO_NUM
 		default -1
 		help
-			Reset pin number
+			Reset pin number. Set -1 if pin not used
 
 	config ST7789_DC_PIN_NUM
 		int "DC pin"
@@ -52,14 +52,14 @@ menu "ST7789 driver configuration"
 		range -1 MAX_GPIO_NUM
 		default -1
 		help
-			Blacklight pin number
+			Blacklight pin number. Set -1 if pin not used
 
 	config ST7789_CS_PIN_NUM
 		int "CS pin"
 		range -1 MAX_GPIO_NUM
 		default -1
 		help
-			SPI chip select pin number
+			SPI chip select pin number. Set -1 if pin not used
 
 	config ST7789_SCREEN_WIDTH
 		int "Screen width"
@@ -93,7 +93,7 @@ menu "ST7789 driver configuration"
 
 	choice ST7789_SPI_FREQ_MHZ
 		prompt "SPI frequency"
-		default ST7789_SPI_FREQ_20_MHZ
+		default ST7789_SPI_FREQ_80_MHZ
 		help
 			Select SPI frequency
 		config ST7789_SPI_FREQ_20_MHZ
@@ -112,7 +112,8 @@ menu "ST7789 driver configuration"
 
 	config ST7789_SPI_QUEUE_SIZE
 		int "SPI queue size"
-		default 7
+		range 1 254
+		default 5
 		help
 			Size of queue of SPI transactions
 endmenu
