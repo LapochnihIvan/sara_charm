@@ -4,9 +4,38 @@
 
 #include <driver/spi_master.h>
 
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
-void st7789_init(spi_device_handle_t* spi_handle);
-void st7789_draw_multicolor_line(spi_device_handle_t spi_handle,
+
+#define ST7789_TX_QUEUE_SIZE (CONFIG_ST7789_SPI_QUEUE_SIZE + 1)
+
+typedef struct st7789_packet_ctx
+{
+    uint8_t _dc_level;
+    TaskHandle_t* _notify_task_handle;
+
+} st7789_packet_ctx_t;
+
+typedef struct st7789_packet
+{
+    spi_transaction_t _spi_transaction;
+    uint8_t _tx_buf[CONFIG_ST7789_SCREEN_WIDTH * sizeof(uint16_t)];
+    st7789_packet_ctx_t ctx;
+} st7789_packet_t;
+
+typedef struct st7789_control
+{
+    spi_device_handle_t _spi_handle;
+    st7789_packet_t _tx_queue[ST7789_TX_QUEUE_SIZE];
+    st7789_packet_t* _cur_packet;
+    TaskHandle_t _notify_task_handle;
+} st7789_control_t;
+
+void st7789_init(st7789_control_t* self);
+void st7789_wait_drawing(void);
+void st7789_fill_screen(st7789_control_t* self, uint16_t color);
+void st7789_draw_multicolor_line(st7789_control_t* self,
                                  uint16_t x_offset,
                                  uint16_t y,
                                  uint16_t width,

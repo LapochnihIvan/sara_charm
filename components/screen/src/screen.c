@@ -1,7 +1,9 @@
 #include "screen.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 
+#include "freertos/idf_additions.h"
 #include "gif.h"
 
 #include "st7789_driver.h"
@@ -20,7 +22,7 @@ BaseType_t start_screen_task(TaskHandle_t* const task_handle)
     return xTaskCreate(
         screen_task_impl,
         "screen_task",
-        configMINIMAL_STACK_SIZE * 20,
+        configMINIMAL_STACK_SIZE * 50,
         NULL,
         tskIDLE_PRIORITY,
         task_handle
@@ -41,11 +43,11 @@ static void screen_task_impl(void* _args)
         gif_draw_callback
     );
 
-    spi_device_handle_t handle;
-    st7789_init(&handle);
+    st7789_control_t lcd;
+    st7789_init(&lcd);
 
     while (true) {
-        GIF_playFrame(&sara_gif_parser, NULL, (void*)handle);
+        GIF_playFrame(&sara_gif_parser, NULL, (void*)&lcd);
     }
 }
 
@@ -65,8 +67,9 @@ static void gif_draw_callback(GIFDRAW* const img_line)
 
     const uint16_t x_offset = (uint16_t)img_line->iX;
     const uint16_t y = (uint16_t)img_line->y;
+    st7789_control_t* const lcd = (st7789_control_t*)img_line->pUser;
     st7789_draw_multicolor_line(
-        (spi_device_handle_t)img_line->pUser,
+        lcd,
         x_offset,
         y,
         line_width,
