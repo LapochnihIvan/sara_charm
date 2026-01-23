@@ -164,11 +164,6 @@ void st7789_draw_multicolor_line(st7789_control_t* const self,
     lcd_send_colors(self, colors, width);
 }
 
-uint16_t st7789_color_from_le(const uint16_t color)
-{
-    return swap_bytes(color);
-}
-
 static void gpio_init(void)
 {
 #if CONFIG_ST7789_VCC_PIN_NUM != NOT_USED_PIN
@@ -270,11 +265,23 @@ static void lcd_send_coords(st7789_control_t* const self,
 }
 
 static void lcd_send_colors(st7789_control_t* const self,
-                            const uint16_t* const colors,
+                            const uint16_t* colors,
                             const uint16_t len)
 {
     lcd_send_command(self, WriteMemory);
-    lcd_send_data(self, (const void*)colors, len * sizeof(uint16_t));
+
+    st7789_packet_t* const packet = self->_cur_packet;
+    const uint16_t tx_len = len * sizeof(uint16_t);
+    const uint8_t* const last_tx_byte = packet->tx_buf + tx_len;
+    for (uint8_t* tx_byte = packet->tx_buf;
+        tx_byte != last_tx_byte;
+        tx_byte += sizeof(uint16_t), ++colors)
+    {
+        *(uint16_t*)tx_byte = swap_bytes(*colors);
+    }
+    packet->spi_transaction.length = tx_len * BITS_IN_BYTE;
+
+    lcd_send_impl(self);
 }
 
 static void lcd_send_color_line(st7789_control_t* const self,
@@ -289,8 +296,7 @@ static void lcd_send_color_line(st7789_control_t* const self,
         tx_byte != last_tx_byte;
         tx_byte += sizeof(uint16_t))
     {
-        *tx_byte = (uint8_t)(color >> BITS_IN_BYTE);
-        *(tx_byte + 1) = (uint8_t)(color & 0xFF);
+        *(uint16_t*)tx_byte = swap_bytes(color);
     }
     packet->spi_transaction.length = tx_len * BITS_IN_BYTE;
 

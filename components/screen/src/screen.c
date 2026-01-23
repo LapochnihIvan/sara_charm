@@ -66,7 +66,7 @@ static void gif_draw_callback(GIFDRAW* const img_line)
          pixel != last_img_pixel;
          ++pixel)
     {
-        *decode_color++ = st7789_color_from_le(img_line->pPalette[*pixel]);
+        *decode_color++ = img_line->pPalette[*pixel];
     }
 
     const uint16_t x_offset = (uint16_t)img_line->iX;

@@ -54,6 +54,5 @@ void st7789_draw_multicolor_line(st7789_control_t* self,
                                  uint16_t y,
                                  uint16_t width,
                                  const uint16_t* colors);
-uint16_t st7789_color_from_le(uint16_t color);
 
 #endif //!SARA_CHARM_ST7789_DRIVER_ST7789_DRIVER_H
