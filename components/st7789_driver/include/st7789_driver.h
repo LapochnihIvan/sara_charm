@@ -38,6 +38,7 @@ typedef struct st7789_control
 } st7789_control_t;
 
 void st7789_init(st7789_control_t* self);
+void st7789_display_on(st7789_control_t* self);
 void st7789_wait_drawing(void);
 void st7789_fill_screen(st7789_control_t* self, uint16_t color);
 void st7789_draw_multicolor_line(st7789_control_t* self,

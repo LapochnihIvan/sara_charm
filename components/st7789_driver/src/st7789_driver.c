@@ -119,7 +119,11 @@ void st7789_init(st7789_control_t* const self)
 
 	lcd_send_command_sync(self, DisplayInversionOn);
 	lcd_send_command_sync(self, NormalDisplayModeOn);
-	lcd_send_command_sync(self, DisplayOn);
+}
+
+void st7789_display_on(st7789_control_t* const self)
+{
+    lcd_send_command_sync(self, DisplayOn);
     delay_ms(DISPLAY_ON_DELAY_MS);
 }
 
