@@ -11,9 +11,6 @@
 #include "embed_file_util.h"
 
 
-#define LCD_WIDTH ((uint16_t)CONFIG_ST7789_SCREEN_WIDTH)
-#define LCD_HEIGHT ((uint16_t)CONFIG_ST7789_SCREEN_HEIGHT)
-
 static void screen_task_impl(void* _args);
 static void gif_draw_callback(GIFDRAW* img_line);
 
@@ -54,7 +51,7 @@ static void screen_task_impl(void* _args)
 static void gif_draw_callback(GIFDRAW* const img_line)
 {
     const uint16_t line_width = (uint16_t)img_line->iWidth;
-    uint16_t decode_line[LCD_WIDTH];
+    uint16_t decode_line[ST7789_SCREEN_WIDTH];
 
     uint16_t* decode_color = decode_line;
     const uint8_t* last_img_pixel = img_line->pPixels + line_width;

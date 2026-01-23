@@ -8,6 +8,9 @@
 #include <freertos/task.h>
 
 
+#define ST7789_SCREEN_WIDTH  ((uint16_t)CONFIG_ST7789_SCREEN_WIDTH)
+#define ST7789_SCREEN_HEIGHT ((uint16_t)CONFIG_ST7789_SCREEN_HEIGHT)
+
 #define ST7789_TX_QUEUE_SIZE (CONFIG_ST7789_SPI_QUEUE_SIZE + 1)
 
 typedef struct st7789_packet_ctx

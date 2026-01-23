@@ -14,9 +14,6 @@
 #define BLK_PIN_NUM ((gpio_num_t)CONFIG_ST7789_SCK_PIN_NUM)
 #define CS_PIN_NUM  ((gpio_num_t)CONFIG_ST7789_CS_PIN_NUM)
 
-#define SCREEN_WIDTH  ((uint16_t)CONFIG_ST7789_SCREEN_WIDTH)
-#define SCREEN_HEIGHT ((uint16_t)CONFIG_ST7789_SCREEN_HEIGHT)
-
 #ifdef CONFIG_ST7789_SPI2_HOST
 #   define SPI_HOST (SPI2_HOST)
 #elif defined(CONFIG_ST7789_SPI3_HOST)
@@ -133,9 +130,9 @@ void st7789_wait_drawing(void)
 
 void st7789_fill_screen(st7789_control_t* const self, const uint16_t color)
 {
-    for (uint16_t y = 0; y < SCREEN_HEIGHT; ++y)
+    for (uint16_t y = 0; y < ST7789_SCREEN_HEIGHT; ++y)
     {
-        lcd_send_coords(self, 0, SCREEN_WIDTH - 1 , y, y);
+        lcd_send_coords(self, 0, ST7789_SCREEN_WIDTH - 1 , y, y);
         lcd_send_color_line(self, color);
     }
 }
@@ -268,7 +265,7 @@ static void lcd_send_color_line(st7789_control_t* const self,
     lcd_send_command(self, WriteMemory);
 
     st7789_packet_t* const packet = self->_cur_packet;
-    const uint16_t tx_len = SCREEN_WIDTH * sizeof(uint16_t);
+    const uint16_t tx_len = ST7789_SCREEN_WIDTH * sizeof(uint16_t);
     const uint8_t* const last_tx_byte = packet->_tx_buf + tx_len;
     for (uint8_t* tx_byte = packet->_tx_buf;
         tx_byte != last_tx_byte;
