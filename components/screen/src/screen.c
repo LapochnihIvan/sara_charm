@@ -69,9 +69,9 @@ static void gif_draw_callback(GIFDRAW* const img_line)
         *decode_color++ = img_line->pPalette[*pixel];
     }
 
+    st7789_control_t* const lcd = (st7789_control_t*)img_line->pUser;
     const uint16_t x_offset = (uint16_t)img_line->iX;
     const uint16_t y = (uint16_t)img_line->y;
-    st7789_control_t* const lcd = (st7789_control_t*)img_line->pUser;
     st7789_draw_multicolor_line(
         lcd,
         x_offset,
