@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "freertos/idf_additions.h"
 #include "gif.h"
 
 #include "st7789_driver.h"
