@@ -1,20 +1,12 @@
 #include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
 
-#include "esp_err.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include <driver/gpio.h>
+#include <esp_sleep.h>
 
-#include "driver/gpio.h"
-#include "esp_log.h"
-#include "hal/gpio_types.h"
-#include "esp_sleep.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
 #include "screen.h"
-
-#include "sdkconfig.h"
 
 
 #define POWER_BTN_GPIO_NUM (GPIO_NUM_0)

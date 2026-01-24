@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "gif.h"
+#include <gif.h>
 
 #include "st7789_driver.h"
 
