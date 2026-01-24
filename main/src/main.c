@@ -33,7 +33,7 @@ void app_main(void)
             while (gpio_get_level(POWER_BTN_GPIO_NUM) == 1) {
                 vTaskDelay(1);
             }
-            ESP_LOGI(__FUNCTION__, "Start deep sleep");
+
             esp_deep_sleep_start();
         }
 
