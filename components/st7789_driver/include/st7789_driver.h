@@ -30,8 +30,8 @@ typedef struct st7789_packet_ctx
 
 typedef struct st7789_packet
 {
-    spi_transaction_t spi_transaction;
-    uint8_t tx_buf[CONFIG_ST7789_SCREEN_WIDTH * sizeof(uint16_t)];
+    spi_transaction_t inner;
+    void* tx_buf;
     st7789_packet_ctx_t ctx;
 } st7789_packet_t;
 

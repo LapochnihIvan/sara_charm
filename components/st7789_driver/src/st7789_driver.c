@@ -1,5 +1,6 @@
 #include "st7789_driver.h"
 
+#include <stdint.h>
 #include <string.h>
 
 #include <driver/gpio.h>
@@ -42,6 +43,9 @@
 #define MEM_DATA_ACCESS_CTRL_RGB (0x00)
 
 #define BITS_IN_BYTE (CHAR_BIT)
+
+#define COLORS_IN_TX_BLOCK (sizeof(uint32_t) / sizeof(uint16_t))
+#define BITS_IN_COLOR (sizeof(uint16_t) * BITS_IN_BYTE)
 
 typedef enum lcd_command
 {
@@ -88,7 +92,7 @@ static void lcd_send_byte(st7789_control_t* self,
 static void lcd_send_data_byte_sync(st7789_control_t* self,
                                     uint8_t byte);
 static void lcd_send_impl(st7789_control_t* self);
-static void lcd_send_byte_sync(spi_device_handle_t spi_handle,
+static void lcd_send_byte_sync(st7789_control_t* self,
                                uint8_t byte,
                                uint8_t dc_level);
 static void lcd_wait_sending(void);
@@ -231,10 +235,15 @@ static void tx_queue_init(st7789_control_t* const self)
     const st7789_packet_t* const last_packet = packet + ST7789_TX_QUEUE_SIZE;
     for (; packet != last_packet; ++packet)
     {
-        packet->spi_transaction = (spi_transaction_t){0};
-        packet->spi_transaction.tx_buffer = packet->tx_buf;
+        packet->inner = (spi_transaction_t){0};
+        packet->tx_buf = heap_caps_aligned_alloc(
+            4,
+            ST7789_SCREEN_WIDTH * sizeof(uint16_t),
+            MALLOC_CAP_DMA
+        );
+        packet->inner.tx_buffer = packet->tx_buf;
         packet->ctx.notify = &self->_notify;
-        packet->spi_transaction.user = (void*)&packet->ctx;
+        packet->inner.user = (void*)&packet->ctx;
     }
     self->_cur_packet = self->_tx_queue;
 }
@@ -249,7 +258,7 @@ static void lcd_send_command(st7789_control_t* const self,
 static void lcd_send_command_sync(st7789_control_t* const self,
                                   const uint8_t byte)
 {
-    lcd_send_byte_sync(self->_spi_handle, byte, DC_COMMAND_LEVEl);
+    lcd_send_byte_sync(self, byte, DC_COMMAND_LEVEl);
 }
 
 static void lcd_send_coords(st7789_control_t* const self,
@@ -270,16 +279,16 @@ static void lcd_send_colors(st7789_control_t* const self,
 {
     lcd_send_command(self, WriteMemory);
 
-    st7789_packet_t* const packet = self->_cur_packet;
-    const uint16_t tx_len = len * sizeof(uint16_t);
-    const uint8_t* const last_tx_byte = packet->tx_buf + tx_len;
-    for (uint8_t* tx_byte = packet->tx_buf;
-        tx_byte != last_tx_byte;
-        tx_byte += sizeof(uint16_t), ++colors)
+    uint32_t* const tx_buf = (uint32_t*)self->_cur_packet->tx_buf;
+    const uint32_t* const last_tx_block = tx_buf + (len / COLORS_IN_TX_BLOCK);
+    for (uint32_t* tx_block = tx_buf; tx_block != last_tx_block; ++tx_block)
     {
-        *(uint16_t*)tx_byte = swap_bytes(*colors);
+        *tx_block = swap_bytes(*colors) << BITS_IN_COLOR;
+        ++colors;
+        *tx_block |= swap_bytes(*colors);
+        ++colors;
     }
-    packet->spi_transaction.length = tx_len * BITS_IN_BYTE;
+    self->_cur_packet->inner.length = len * BITS_IN_COLOR;
 
     lcd_send_impl(self);
 }
@@ -289,16 +298,17 @@ static void lcd_send_color_line(st7789_control_t* const self,
 {
     lcd_send_command(self, WriteMemory);
 
-    st7789_packet_t* const packet = self->_cur_packet;
-    const uint16_t tx_len = ST7789_SCREEN_WIDTH * sizeof(uint16_t);
-    const uint8_t* const last_tx_byte = packet->tx_buf + tx_len;
-    for (uint8_t* tx_byte = packet->tx_buf;
-        tx_byte != last_tx_byte;
-        tx_byte += sizeof(uint16_t))
+    const uint16_t be_color = swap_bytes(color);
+    const uint32_t tx_block_val = (be_color << BITS_IN_COLOR) | be_color;
+
+    uint32_t* const tx_buf = (uint32_t*)self->_cur_packet->tx_buf;
+    const uint32_t* const last_tx_block =
+        tx_buf + (ST7789_SCREEN_WIDTH / COLORS_IN_TX_BLOCK);
+    for (uint32_t* tx_block = tx_buf; tx_block != last_tx_block; ++tx_block)
     {
-        *(uint16_t*)tx_byte = swap_bytes(color);
+        *tx_block = tx_block_val;
     }
-    packet->spi_transaction.length = tx_len * BITS_IN_BYTE;
+    self->_cur_packet->inner.length = ST7789_SCREEN_WIDTH * BITS_IN_COLOR;
 
     lcd_send_impl(self);
 }
@@ -327,7 +337,7 @@ static void lcd_send_data(st7789_control_t* const self,
 static void lcd_send_data_byte_sync(st7789_control_t* const self,
                                     const uint8_t byte)
 {
-    lcd_send_byte_sync(self->_spi_handle, byte, DC_DATA_LEVEl);
+    lcd_send_byte_sync(self, byte, DC_DATA_LEVEl);
 }
 
 static void lcd_send(st7789_control_t* const self,
@@ -336,7 +346,7 @@ static void lcd_send(st7789_control_t* const self,
 {
     st7789_packet_t* const packet = self->_cur_packet;
     memcpy(packet->tx_buf, data, num_bytes);
-    packet->spi_transaction.length = num_bytes * BITS_IN_BYTE;
+    packet->inner.length = num_bytes * BITS_IN_BYTE;
 
     lcd_send_impl(self);
 }
@@ -349,9 +359,9 @@ static void lcd_send_byte(st7789_control_t* const self,
 
 static void lcd_send_impl(st7789_control_t* const self)
 {
-    spi_transaction_t* const spi_transaction = &self->_cur_packet->spi_transaction;
-    spi_transaction->rxlength = 0;
-    spi_device_queue_trans(self->_spi_handle, spi_transaction, portMAX_DELAY);
+    spi_transaction_t* const transaction = &self->_cur_packet->inner;
+    transaction->rxlength = 0;
+    spi_device_queue_trans(self->_spi_handle, transaction, portMAX_DELAY);
 
     ++self->_cur_packet;
     if (self->_cur_packet == self->_tx_queue + ST7789_TX_QUEUE_SIZE)
@@ -360,20 +370,24 @@ static void lcd_send_impl(st7789_control_t* const self)
     }
 }
 
-static void lcd_send_byte_sync(const spi_device_handle_t spi_handle,
+static void lcd_send_byte_sync(st7789_control_t* const self,
                                const uint8_t byte,
                                const uint8_t dc_level)
 {
-    spi_transaction_t spi_transaction = {0};
-    spi_transaction.length = sizeof(uint8_t) * BITS_IN_BYTE;
+    spi_transaction_t transaction = {0};
+    transaction.length = sizeof(uint32_t) * BITS_IN_BYTE;
     st7789_packet_ctx_t ctx = {
         .dc_level = dc_level,
         .notify = NULL
     };
-    spi_transaction.user = (void*)&ctx;
-    spi_transaction.tx_buffer = (void*)&byte;
+    transaction.user = (void*)&ctx;
 
-    spi_device_polling_transmit(spi_handle, &spi_transaction);
+    uint32_t* const tx_buf = self->_cur_packet->tx_buf;
+    tx_buf[0] =
+        (uint32_t)byte << ((sizeof(uint32_t) - sizeof(uint8_t)) * BITS_IN_BYTE);
+    transaction.tx_buffer = (void*)tx_buf;
+
+    spi_device_polling_transmit(self->_spi_handle, &transaction);
 }
 
 static void lcd_wait_sending(void)
@@ -404,7 +418,7 @@ static void spi_post_callback(spi_transaction_t* const transaction)
     if (ctx->notify == NULL)
     {
         return;
-    }    
+    }
 
     --ctx->notify->num_packets_in_process;
 
