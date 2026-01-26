@@ -4,6 +4,13 @@
 
 #include <driver/gpio.h>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+
+#include <freertos/atomic.h>
+
+#pragma GCC diagnostic pop
+
 
 #define VCC_PIN_NUM ((gpio_num_t)CONFIG_ST7789_VCC_PIN_NUM)
 #define SCK_PIN_NUM ((gpio_num_t)CONFIG_ST7789_SCK_PIN_NUM)
@@ -358,6 +365,10 @@ static void lcd_send_byte(st7789_control_t* const self,
 
 static void lcd_send_impl(st7789_control_t* const self)
 {
+    ATOMIC_ENTER_CRITICAL();
+    ++self->_notify.num_packets_in_process;
+    ATOMIC_EXIT_CRITICAL();
+
     spi_transaction_t* const transaction = &self->_cur_packet->inner;
     transaction->rxlength = 0;
     spi_device_queue_trans(self->_spi_handle, transaction, portMAX_DELAY);
@@ -397,13 +408,6 @@ static void spi_pre_callback(spi_transaction_t* const transaction)
         (st7789_packet_ctx_t*)transaction->user;
 
     gpio_set_level(DC_PIN_NUM, ctx->dc_level);
-
-    if (ctx->notify == NULL)
-    {
-        return;
-    }
-
-    ++ctx->notify->num_packets_in_process;
 }
 
 static void spi_post_callback(spi_transaction_t* const transaction)
