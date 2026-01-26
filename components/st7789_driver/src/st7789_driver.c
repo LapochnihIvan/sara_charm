@@ -1,6 +1,5 @@
 #include "st7789_driver.h"
 
-#include <stdint.h>
 #include <string.h>
 
 #include <driver/gpio.h>
@@ -375,17 +374,14 @@ static void lcd_send_byte_sync(st7789_control_t* const self,
                                const uint8_t dc_level)
 {
     spi_transaction_t transaction = {0};
-    transaction.length = sizeof(uint32_t) * BITS_IN_BYTE;
+    transaction.flags = SPI_TRANS_USE_TXDATA;
+    transaction.length = sizeof(uint8_t) * BITS_IN_BYTE;
     st7789_packet_ctx_t ctx = {
         .dc_level = dc_level,
         .notify = NULL
     };
     transaction.user = (void*)&ctx;
-
-    uint32_t* const tx_buf = self->_cur_packet->tx_buf;
-    tx_buf[0] =
-        (uint32_t)byte << ((sizeof(uint32_t) - sizeof(uint8_t)) * BITS_IN_BYTE);
-    transaction.tx_buffer = (void*)tx_buf;
+    transaction.tx_data[0] = byte;
 
     spi_device_polling_transmit(self->_spi_handle, &transaction);
 }
