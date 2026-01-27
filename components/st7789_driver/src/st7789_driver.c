@@ -229,7 +229,10 @@ static void spi_init(spi_device_handle_t* const spi_handle)
     devcfg.post_cb = spi_post_callback;
 
 	spi_bus_add_device(SPI_HOST, &devcfg, spi_handle);
+
+#ifdef CONFIG_ST7789_ACQUIRE_SPI_BUS
     spi_device_acquire_bus(*spi_handle, portMAX_DELAY);
+#endif //CONFIG_ST7789_ACQUIRE_SPI_BUS
 }
 
 static void tx_queue_init(st7789_control_t* const self)

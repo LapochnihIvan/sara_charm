@@ -75,6 +75,18 @@ menu "ST7789 driver configuration"
 		help
 			The height resolution of the screen
 
+	config ST7789_SPI_QUEUE_SIZE
+		int "SPI queue size"
+		range 1 254
+		default 5
+		help
+			Size of queue of SPI transactions
+
+	config ST7789_ACQUIRE_SPI_BUS
+		bool "Acquire SPI bus"
+		help
+			Flag for call spi_device_acquire_bus in st7789_init
+
 	choice ST7789_SPI_HOST
 		prompt "SPI host"
 		default ST7789_SPI2_HOST
@@ -109,11 +121,4 @@ menu "ST7789 driver configuration"
 			help
 				Set 80 MHz SPI frequency
 	endchoice
-
-	config ST7789_SPI_QUEUE_SIZE
-		int "SPI queue size"
-		range 1 254
-		default 5
-		help
-			Size of queue of SPI transactions
 endmenu
