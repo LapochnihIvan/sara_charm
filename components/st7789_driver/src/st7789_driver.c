@@ -56,16 +56,16 @@
 
 typedef enum lcd_command
 {
-    SoftwareReset        = 0x01,
-    SleepOut             = 0x11,
-    NormalDisplayModeOn  = 0x13,
-    DisplayInversionOn   = 0x21,
-    DisplayOn            = 0x29,
-    SetColumnAddr        = 0x2A,
-    SetRowAddr           = 0x2B,
-    WriteMemory          = 0x2C,
-    SetMemDataAccessCtrl = 0x36,
-    SetPixelFormat       = 0x3A,
+    SOFTWARE_RESET           = 0x01,
+    SLEEP_OUT                = 0x11,
+    NORMAL_DISPLAY_MODE_ON   = 0x13,
+    DISPLAY_INVERSION_ON     = 0x21,
+    DISPLAY_ON               = 0x29,
+    SET_COLUMN_ADDR          = 0x2A,
+    SET_ROW_ADDR             = 0x2B,
+    WRITE_MEMORY             = 0x2C,
+    SET_MEM_DATA_ACCESS_CTRL = 0x36,
+    SET_PIXEL_FORMAT         = 0x3A,
 } lcd_command_t;
 
 static void gpio_init(void);
@@ -114,21 +114,21 @@ void st7789_init(st7789_control_t* const self)
     spi_init(&self->_spi_handle);
     tx_queue_init(self);
 
-    lcd_send_command_sync(self, SoftwareReset);
+    lcd_send_command_sync(self, SOFTWARE_RESET);
     delay_ms(SOFTWARE_RESET_DELAY_MS);
 
-	lcd_send_command_sync(self, SleepOut);
+	lcd_send_command_sync(self, SLEEP_OUT);
     delay_ms(SLEEP_OUT_DELAY_MS);
 
-    lcd_send_command_sync(self, SetPixelFormat);
+    lcd_send_command_sync(self, SET_PIXEL_FORMAT);
 	lcd_send_data_byte_sync(self, PIXEL_FORMAT_16_BIT);
     delay_ms(SET_PIXEL_FORMAT_DELAY_MS);
 	
-    lcd_send_command_sync(self, SetMemDataAccessCtrl);
+    lcd_send_command_sync(self, SET_MEM_DATA_ACCESS_CTRL);
 	lcd_send_data_byte_sync(self, MEM_DATA_ACCESS_CTRL_RGB);
 
-	lcd_send_command_sync(self, DisplayInversionOn);
-	lcd_send_command_sync(self, NormalDisplayModeOn);
+	lcd_send_command_sync(self, DISPLAY_INVERSION_ON);
+	lcd_send_command_sync(self, NORMAL_DISPLAY_MODE_ON);
 
 #if CONFIG_ST7789_BLK_PIN_NUM != NOT_USED_PIN
     gpio_set_level(BLK_PIN_NUM, 1);
@@ -137,7 +137,7 @@ void st7789_init(st7789_control_t* const self)
 
 void st7789_display_on(st7789_control_t* const self)
 {
-    lcd_send_command_sync(self, DisplayOn);
+    lcd_send_command_sync(self, DISPLAY_ON);
     delay_ms(DISPLAY_ON_DELAY_MS);
 }
 
@@ -277,9 +277,9 @@ static void lcd_send_coords(st7789_control_t* const self,
                             const uint16_t y_begin,
                             const uint16_t y_end)
 {
-    lcd_send_command(self, SetColumnAddr);
+    lcd_send_command(self, SET_COLUMN_ADDR);
     lcd_send_addr(self, x_begin, x_end);
-    lcd_send_command(self, SetRowAddr);
+    lcd_send_command(self, SET_ROW_ADDR);
     lcd_send_addr(self, y_begin, y_end);
 }
 
@@ -287,7 +287,7 @@ static void lcd_send_colors(st7789_control_t* const self,
                             const uint16_t* colors,
                             const uint16_t len)
 {
-    lcd_send_command(self, WriteMemory);
+    lcd_send_command(self, WRITE_MEMORY);
 
     uint32_t* const tx_buf = (uint32_t*)self->_cur_packet->tx_buf;
     const uint32_t* const last_tx_block = tx_buf + (len / COLORS_IN_TX_BLOCK);
@@ -306,7 +306,7 @@ static void lcd_send_colors(st7789_control_t* const self,
 static void lcd_send_color_line(st7789_control_t* const self,
                                 const uint16_t color)
 {
-    lcd_send_command(self, WriteMemory);
+    lcd_send_command(self, WRITE_MEMORY);
 
     const uint16_t be_color = swap_bytes(color);
     const uint32_t tx_block_val = (be_color << BITS_IN_COLOR) | be_color;
