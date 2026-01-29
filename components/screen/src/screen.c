@@ -1,7 +1,6 @@
 #include "screen.h"
 
 #include <stdbool.h>
-#include <stdint.h>
 
 #include <gif.h>
 
