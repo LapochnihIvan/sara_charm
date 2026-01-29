@@ -18,7 +18,7 @@ BaseType_t start_screen_task(TaskHandle_t* const task_handle)
     return xTaskCreate(
         screen_task_impl,
         "screen_task",
-        configMINIMAL_STACK_SIZE * 50,
+        sizeof(GIFIMAGE) + sizeof(st7789_control_t) + 1200,
         NULL,
         tskIDLE_PRIORITY,
         task_handle
