@@ -1,5 +1,6 @@
 #include "st7789_driver.h"
 
+#include <stdint.h>
 #include <string.h>
 
 #include <driver/gpio.h>
@@ -407,10 +408,10 @@ static void lcd_wait_sending(void)
 
 static void spi_pre_callback(spi_transaction_t* const transaction)
 {
-    const st7789_packet_ctx_t* const ctx =
-        (st7789_packet_ctx_t*)transaction->user;
+    const uint8_t dc_level =
+        ((st7789_packet_ctx_t*)transaction->user)->dc_level;
 
-    gpio_set_level(DC_PIN_NUM, ctx->dc_level);
+    gpio_set_level(DC_PIN_NUM, dc_level);
 }
 
 static void spi_post_callback(spi_transaction_t* const transaction)
