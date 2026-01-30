@@ -1,2 +1,3 @@
 [build]
+minify = "on_release"
 dist = "./dist"
