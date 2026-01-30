@@ -6,7 +6,7 @@
 
 #include "st7789_driver.h"
 
-#include "embed_file_util.h"
+#include "utils/embed_file.h"
 
 
 static void screen_task_impl(void* _args);

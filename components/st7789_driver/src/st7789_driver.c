@@ -1,6 +1,5 @@
 #include "st7789_driver.h"
 
-#include <stdint.h>
 #include <string.h>
 
 #include <driver/gpio.h>
@@ -11,6 +10,9 @@
 #include <freertos/atomic.h>
 
 #pragma GCC diagnostic pop
+
+#include "utils/bit.h"
+#include "utils/delay.h"
 
 
 #define VCC_PIN_NUM ((gpio_num_t)CONFIG_ST7789_VCC_PIN_NUM)
@@ -48,8 +50,6 @@
 
 #define PIXEL_FORMAT_16_BIT      (0x55)
 #define MEM_DATA_ACCESS_CTRL_RGB (0x00)
-
-#define BITS_IN_BYTE (CHAR_BIT)
 
 #define COLORS_IN_TX_BLOCK (sizeof(uint32_t) / sizeof(uint16_t))
 #define BITS_IN_COLOR (sizeof(uint16_t) * BITS_IN_BYTE)
@@ -105,8 +105,6 @@ static void lcd_send_byte_sync(st7789_control_t* self,
 static void lcd_wait_sending(void);
 static void spi_pre_callback(spi_transaction_t* transaction);
 static void spi_post_callback(spi_transaction_t* transaction);
-static inline void delay_ms(uint16_t num_ms);
-static inline uint16_t swap_bytes(uint16_t num);
 
 void st7789_init(st7789_control_t* const self)
 {
@@ -431,14 +429,4 @@ static void spi_post_callback(spi_transaction_t* const transaction)
     {
         vTaskNotifyGiveFromISR(task_handle, NULL);
     }
-}
-
-static inline void delay_ms(const uint16_t num_ms)
-{
-    vTaskDelay(pdMS_TO_TICKS(num_ms));
-}
-
-static inline uint16_t swap_bytes(const uint16_t num)
-{
-    return ((num & 0xFF) << BITS_IN_BYTE) | (num >> BITS_IN_BYTE);
 }
