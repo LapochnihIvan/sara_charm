@@ -1,4 +1,6 @@
 #include "st7789_driver.h"
+#include "driver/spi_common.h"
+#include "driver/spi_master.h"
 
 #include <string.h>
 
@@ -69,8 +71,11 @@ typedef enum lcd_command
 } lcd_command_t;
 
 static void gpio_init(void);
+static void gpio_deinit(void);
 static void spi_init(spi_device_handle_t* spi_handle);
+static void spi_deinit(const spi_device_handle_t spi_handle);
 static void tx_queue_init(st7789_control_t* self);
+static void tx_queue_deinit(st7789_packet_t* tx_queue);
 static void lcd_send_command(st7789_control_t* self,
                              lcd_command_t command);
 static void lcd_send_command_sync(st7789_control_t* self,
@@ -131,6 +136,13 @@ void st7789_init(st7789_control_t* const self)
 #if CONFIG_ST7789_BLK_PIN_NUM != NOT_USED_PIN
     gpio_set_level(BLK_PIN_NUM, 1);
 #endif //CONFIG_ST7789_BLK_PIN_NUM != -1
+}
+
+void st7789_deinit(st7789_control_t* self)
+{
+    spi_deinit(self->_spi_handle);
+    gpio_deinit();
+    tx_queue_deinit(self->_tx_queue);
 }
 
 void st7789_display_on(st7789_control_t* const self)
@@ -204,6 +216,27 @@ static void gpio_init(void)
 #endif //CONFIG_ST7789_BLK_PIN_NUM != NOT_USED_PIN
 }
 
+static void gpio_deinit(void)
+{
+#if CONFIG_ST7789_VCC_PIN_NUM != NOT_USED_PIN
+    gpio_reset_pin(VCC_PIN_NUM);
+#endif //CONFIG_ST7789_VCC_PIN_NUM != NOT_USED_PIN
+
+#if CONFIG_ST7789_CS_PIN_NUM != NOT_USED_PIN
+    gpio_reset_pin(CS_PIN_NUM);
+#endif //CONFIG_ST7789_CS_PIN_NUM != NOT_USED_PIN
+
+    gpio_reset_pin(DC_PIN_NUM);
+
+#if CONFIG_ST7789_RES_PIN_NUM != NOT_USED_PIN
+    gpio_reset_pin(RES_PIN_NUM);
+#endif //CONFIG_ST7789_RES_PIN_NUM != NOT_USED_PIN
+
+#if CONFIG_ST7789_BLK_PIN_NUM != NOT_USED_PIN
+    gpio_reset_pin(BLK_PIN_NUM);
+#endif //CONFIG_ST7789_BLK_PIN_NUM != NOT_USED_PIN
+}
+
 static void spi_init(spi_device_handle_t* const spi_handle)
 {
     spi_bus_config_t spi_conf = {
@@ -234,6 +267,16 @@ static void spi_init(spi_device_handle_t* const spi_handle)
 #endif //CONFIG_ST7789_ACQUIRE_SPI_BUS
 }
 
+static void spi_deinit(const spi_device_handle_t spi_handle)
+{
+#ifdef CONFIG_ST7789_ACQUIRE_SPI_BUS
+    spi_device_release_bus(spi_handle);
+#endif //CONFIG_ST7789_ACQUIRE_SPI_BUS
+
+    spi_bus_remove_device(spi_handle);
+    spi_bus_free(SPI_HOST);
+}
+
 static void tx_queue_init(st7789_control_t* const self)
 {
     self->_notify.notify_task_handle = NULL;
@@ -254,6 +297,15 @@ static void tx_queue_init(st7789_control_t* const self)
         packet->inner.user = (void*)&packet->ctx;
     }
     self->_cur_packet = self->_tx_queue;
+}
+
+static void tx_queue_deinit(st7789_packet_t* const tx_queue)
+{
+    const st7789_packet_t* const last_packet = tx_queue + ST7789_TX_QUEUE_SIZE;
+    for (st7789_packet_t* packet = tx_queue; packet != last_packet; ++packet)
+    {
+        heap_caps_free(packet->tx_buf);
+    }
 }
 
 static void lcd_send_command(st7789_control_t* const self,

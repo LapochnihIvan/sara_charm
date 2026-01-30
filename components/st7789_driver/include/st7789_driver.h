@@ -44,6 +44,7 @@ typedef struct st7789_control
 } st7789_control_t;
 
 void st7789_init(st7789_control_t* self);
+void st7789_deinit(st7789_control_t* self);
 void st7789_display_on(st7789_control_t* self);
 void st7789_enable_drawing_notify(st7789_control_t* self);
 void st7789_disable_drawing_notify(st7789_control_t* self);
