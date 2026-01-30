@@ -24,4 +24,5 @@ typedef struct embed_file
     size_t len;
 } embed_file_t;
 
+
 #endif //!SARA_CHARM_UTILS_EMBED_FILE_H
