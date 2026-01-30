@@ -7,9 +7,10 @@
 #include "st7789_driver.h"
 
 #include "utils/embed_file.h"
-
+#include "esp_log.h"
 
 static void screen_task_impl(void* _args);
+static void screen_task_delete_callback(int _index, void* lcd_raw);
 static void gif_draw_callback(GIFDRAW* img_line);
 
 BaseType_t start_screen_task(TaskHandle_t* const task_handle)
@@ -41,6 +42,13 @@ static void screen_task_impl(void* _args)
     st7789_control_t lcd;
     st7789_init(&lcd);
 
+    vTaskSetThreadLocalStoragePointerAndDelCallback(
+        NULL,
+        0,
+        (void*)&lcd,
+        screen_task_delete_callback
+    );
+
     st7789_enable_drawing_notify(&lcd);
     st7789_fill_screen(&lcd, ST7789_BLACK_COLOR);
     st7789_wait_drawing();
@@ -51,6 +59,12 @@ static void screen_task_impl(void* _args)
     while (true) {
         GIF_playFrame(&sara_gif_parser, NULL, (void*)&lcd);
     }
+}
+
+static void screen_task_delete_callback(int _index, void* const lcd_raw)
+{
+    st7789_control_t* const lcd = (st7789_control_t*)lcd_raw;
+    st7789_deinit(lcd);
 }
 
 static void gif_draw_callback(GIFDRAW* const img_line)
