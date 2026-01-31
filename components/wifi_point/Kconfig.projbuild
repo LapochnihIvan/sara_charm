@@ -1,0 +1,17 @@
+menu "WI-FI point configuration"
+    config WIFI_DEFAULT_SSID
+        string "Default SSID"
+        default "SaraCharm"
+
+    config WIFI_DEFAULT_PASSWORD
+        string "Default password"
+        default "12345678"
+
+    config WIFI_CHANNEL
+        int "Channel"
+        default 6
+
+    config WIFI_HIDDEN
+        bool "Hidden"
+        default true
+endmenu
