@@ -9,7 +9,7 @@
 
 #include "screen.h"
 #include "wifi_point.h"
-// #include "server.h"
+#include "server.h"
 
 
 #define POWER_BTN_GPIO_NUM (GPIO_NUM_0)
@@ -34,6 +34,7 @@ void app_main(void)
     ESP_ERROR_CHECK(ret);
 
     start_wifi_point();
+    start_server();
 
     while (true) {
         if (gpio_get_level(POWER_BTN_GPIO_NUM) == 1) {
