@@ -516,13 +516,13 @@ CONFIG_ST7789_SPI_FREQ_80_MHZ=y
 # end of ST7789 driver configuration
 
 #
-# WI-FI point configuration
+# Wi-Fi point configuration
 #
 CONFIG_WIFI_DEFAULT_SSID="SaraCharm"
 CONFIG_WIFI_DEFAULT_PASSWORD="12345678"
 CONFIG_WIFI_CHANNEL=6
 CONFIG_WIFI_HIDDEN=y
-# end of WI-FI point configuration
+# end of Wi-Fi point configuration
 
 #
 # Compiler options

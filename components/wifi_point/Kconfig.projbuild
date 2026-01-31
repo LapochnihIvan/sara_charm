@@ -1,4 +1,4 @@
-menu "WI-FI point configuration"
+menu "Wi-Fi point configuration"
     config WIFI_DEFAULT_SSID
         string "Default SSID"
         default "SaraCharm"
@@ -13,5 +13,5 @@ menu "WI-FI point configuration"
 
     config WIFI_HIDDEN
         bool "Hidden"
-        default true
+        default y
 endmenu
