@@ -3,5 +3,6 @@ managed_components/
 dependencies.lock
 .cache/
 sdkconfig.old
-fronted/target/
-fronted/dist/
+frontend/target/
+frontend/dist/
+frontend/Cargo.lock
