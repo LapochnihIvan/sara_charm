@@ -34,7 +34,7 @@ static void screen_task_impl(void* _args)
     GIF_begin(&sara_gif_parser, GIF_PALETTE_RGB565_LE);
     GIF_openRAM(
         &sara_gif_parser,
-        (uint8_t*)sara_gif.begin,
+        (uint8_t*)sara_gif.data,
         (int)sara_gif.len,
         gif_draw_callback
     );

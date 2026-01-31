@@ -17,7 +17,7 @@
 
 #define GET_EMBED_FILE(name, format)                           \
 {                                                              \
-    .begin = embed_file_ ## name ## _ ## format ## _begin,     \
+    .data = embed_file_ ## name ## _ ## format ## _begin,      \
     .len = (size_t)(embed_file_ ## name ## _ ## format ## _end \
         - embed_file_ ## name ## _ ## format ## _begin)        \
 }
@@ -27,7 +27,7 @@
 
 typedef struct embed_file
 {
-    const uint8_t* begin;
+    const uint8_t* data;
     size_t len;
 } embed_file_t;
 
