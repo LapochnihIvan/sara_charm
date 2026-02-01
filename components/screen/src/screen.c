@@ -7,7 +7,6 @@
 #include "st7789_driver.h"
 
 #include "utils/embed_file.h"
-#include "esp_log.h"
 
 static void screen_task_impl(void* _args);
 static void screen_task_delete_callback(int _index, void* lcd_raw);
