@@ -29,7 +29,7 @@ pub fn settings() -> Html {
                 </div>
                 if *is_menu_open {
                     <div class="drop-down-menu">
-                        // Some inputs here
+                        <h3 class="settings-header">{"Настройки Wi-Fi"}</h3>
                         <p>{"SSID:"}</p>
                         <p>{"Пароль:"}</p>
                     </div>

@@ -39,6 +39,7 @@
     border-radius: 0.5rem;
     padding: 1rem;
     color: #EEE;
+    font-size: 1rem;
 
     opacity: 0;
     animation: drop-down 0.4s ease-out forwards;
@@ -53,4 +54,11 @@
         opacity: 1;
         transform: scale(1) translateY(0);
     }
+}
+
+.settings-header {
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #000;
+    font-size: 1.2rem;
 }
