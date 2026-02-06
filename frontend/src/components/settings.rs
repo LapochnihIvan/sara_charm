@@ -43,9 +43,10 @@ pub fn settings() -> Html {
 #[function_component(DropDownMenu)]
 fn drop_down_menu() -> Html {
     let wifi_settings = use_future(|| async {
-        match Request::get("/api/wifi_settings").send().await {
-            Ok(resp) => resp.binary().await.unwrap_or_default(),
-            _ => Default::default(),
+        if let Ok(resp) = Request::get("/api/wifi_settings").send().await {
+            resp.binary().await.unwrap_or_default()
+        } else {
+            Default::default()
         }
     });
 
@@ -61,8 +62,9 @@ fn drop_down_menu() -> Html {
 }
 
 fn render_wifi_settings(settings: &Vec<u8>) -> Html {
-    let settings = WiFiSettings::decode(settings.as_slice()).unwrap_or_default();
-    html!{
+    let settings =
+        WiFiSettings::decode(settings.as_slice()).unwrap_or_default();
+    html! {
         <>
             <h3 class="settings-header">{"Настройки Wi-Fi"}</h3>
 
