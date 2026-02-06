@@ -1,9 +1,9 @@
 use yew::prelude::*;
 use yew_hooks::prelude::*;
 
-use stylist::{Style, yew::styled_component};
+use stylist::Style;
 
-#[styled_component(Settings)]
+#[function_component(Settings)]
 pub fn settings() -> Html {
     let style_sheet = Style::new(include_str!("../../css/settings.css")).unwrap();
     
