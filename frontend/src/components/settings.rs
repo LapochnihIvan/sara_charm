@@ -6,7 +6,7 @@ use crate::utils::get_css::get_css;
 #[function_component(Settings)]
 pub fn settings() -> Html {
     let style_sheet = get_css!("settings.css");
-    
+
     let is_menu_open = use_bool_toggle(false);
     let menu_toggle = {
         let is_open = is_menu_open.clone();
