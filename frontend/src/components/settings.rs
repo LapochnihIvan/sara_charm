@@ -1,6 +1,11 @@
-use yew::prelude::*;
+use gloo_net::http::Request;
+use web_sys::HtmlInputElement;
+use yew::{prelude::*, suspense::use_future};
 use yew_hooks::prelude::*;
 
+use prost::Message;
+
+use crate::proto::requests::WiFiSettings;
 use crate::utils::get_css::get_css;
 
 #[function_component(Settings)]
@@ -28,13 +33,50 @@ pub fn settings() -> Html {
                     {include!(concat!(env!("OUT_DIR"), "/gear_svg_nested"))}
                 </div>
                 if *is_menu_open {
-                    <div class="drop-down-menu">
-                        <h3 class="settings-header">{"Настройки Wi-Fi"}</h3>
-                        <p>{"SSID:"}</p>
-                        <p>{"Пароль:"}</p>
-                    </div>
+                    <DropDownMenu />
                 }
             </div>
         </div>
+    }
+}
+
+#[function_component(DropDownMenu)]
+fn drop_down_menu() -> Html {
+    let wifi_settings = use_future(|| async {
+        match Request::get("/api/wifi_settings").send().await {
+            Ok(resp) => resp.binary().await.unwrap_or_default(),
+            _ => Default::default(),
+        }
+    });
+
+    html! {
+        <div class="drop-down-menu">
+            if let Ok(wifi_settings) = wifi_settings {
+                {render_wifi_settings(&*wifi_settings)}
+            } else {
+                <p>{"Загрузка..."}</p>
+            }
+        </div>
+    }
+}
+
+fn render_wifi_settings(settings: &Vec<u8>) -> Html {
+    let settings = WiFiSettings::decode(settings.as_slice()).unwrap_or_default();
+    html!{
+        <>
+            <h3 class="settings-header">{"Настройки Wi-Fi"}</h3>
+
+            {render_wifi_settings_option("SSID:", settings.ssid)}
+            {render_wifi_settings_option("Пароль:", settings.password)}
+        </>
+    }
+}
+
+fn render_wifi_settings_option(title: &str, start_value: String) -> Html {
+    html! {
+        <>
+            <p>{title}</p>
+            <input value={start_value} />
+        </>
     }
 }

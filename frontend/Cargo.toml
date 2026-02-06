@@ -9,7 +9,13 @@ panic = "abort"
 strip = true
 opt-level = "z"
 
+[build-dependencies]
+prost-build = "0.14.3"
+
 [dependencies]
+web-sys = { version = "0.3.85", features = ["HtmlInputElement"] }
+gloo-net = "0.6.0"
 yew = { version = "0.22.0", features = ["csr"] }
 yew-hooks = "0.4.2"
 stylist = { version = "0.13.0", features = ["yew", "parser"] }
+prost = "0.14.3"

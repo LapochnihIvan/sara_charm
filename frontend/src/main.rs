@@ -1,4 +1,5 @@
 mod components;
+mod proto;
 mod utils;
 
 use components::app::App;
