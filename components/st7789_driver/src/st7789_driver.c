@@ -116,7 +116,10 @@ void st7789_init(st7789_control_t* const self)
     gpio_init();
     spi_init(&self->_spi_handle);
     tx_queue_init(self);
+}
 
+void st7789_send_init_commands(st7789_control_t* const self)
+{
     lcd_send_command_sync(self, SOFTWARE_RESET);
     delay_ms(SOFTWARE_RESET_DELAY_MS);
 

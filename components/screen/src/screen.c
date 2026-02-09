@@ -4,6 +4,7 @@
 
 #include <gif.h>
 
+#include "freertos/projdefs.h"
 #include "st7789_driver.h"
 
 #include "utils/embed_file.h"
@@ -12,20 +13,50 @@ static void screen_task_impl(void* _args);
 static void screen_task_delete_callback(int _index, void* lcd_raw);
 static void gif_draw_callback(GIFDRAW* img_line);
 
-BaseType_t start_screen_task(TaskHandle_t* const task_handle)
+BaseType_t start_screen_task(screen_task_t* const self)
 {
-    return xTaskCreate(
+    st7789_init(&self->_lcd);
+
+    const BaseType_t res = xTaskCreate(
         screen_task_impl,
         "screen_task",
         sizeof(GIFIMAGE) + sizeof(st7789_control_t) + 1200,
-        NULL,
+        (void*)&self->_lcd,
         tskIDLE_PRIORITY,
-        task_handle
+        &self->_handle
     );
+
+    if (res == pdPASS)
+    {
+        vTaskSetThreadLocalStoragePointerAndDelCallback(
+            self->_handle,
+            0,
+            (void*)&self->_lcd,
+            screen_task_delete_callback
+        );
+    }
+
+    return res;
 }
 
-static void screen_task_impl(void* _args)
+void stop_screen_task(screen_task_t* const self)
 {
+    vTaskSuspend(self->_handle);
+    vTaskDelete(self->_handle);
+}
+
+static void screen_task_impl(void* lcd_raw)
+{
+    st7789_control_t* const lcd = (st7789_control_t*)lcd_raw;
+    st7789_send_init_commands(lcd);
+
+    st7789_enable_drawing_notify(lcd);
+    st7789_fill_screen(lcd, ST7789_BLACK_COLOR);
+    st7789_wait_drawing();
+    st7789_disable_drawing_notify(lcd);
+
+    st7789_display_on(lcd);
+
     EXTERN_EMBED_FILE(sara, gif);
     embed_file_t sara_gif = GET_EMBED_FILE(sara, gif);
 
@@ -38,25 +69,8 @@ static void screen_task_impl(void* _args)
         gif_draw_callback
     );
 
-    st7789_control_t lcd;
-    st7789_init(&lcd);
-
-    vTaskSetThreadLocalStoragePointerAndDelCallback(
-        NULL,
-        0,
-        (void*)&lcd,
-        screen_task_delete_callback
-    );
-
-    st7789_enable_drawing_notify(&lcd);
-    st7789_fill_screen(&lcd, ST7789_BLACK_COLOR);
-    st7789_wait_drawing();
-    st7789_disable_drawing_notify(&lcd);
-
-    st7789_display_on(&lcd);
-
     while (true) {
-        GIF_playFrame(&sara_gif_parser, NULL, (void*)&lcd);
+        GIF_playFrame(&sara_gif_parser, NULL, (void*)lcd);
     }
 }
 
