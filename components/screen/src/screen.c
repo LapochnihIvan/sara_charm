@@ -20,7 +20,7 @@ BaseType_t start_screen_task(screen_task_t* const self)
     const BaseType_t res = xTaskCreate(
         screen_task_impl,
         "screen_task",
-        sizeof(GIFIMAGE) + sizeof(st7789_control_t) + 1200,
+        sizeof(GIFIMAGE) + 1200,
         (void*)&self->_lcd,
         tskIDLE_PRIORITY,
         &self->_handle
