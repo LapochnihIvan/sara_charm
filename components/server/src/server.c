@@ -129,6 +129,7 @@ static esp_err_t get_file_handler_impl(httpd_req_t* const req,
     if (!is_client_accepts_gzip(req))
     {
         httpd_resp_set_status(req, "406 Not Acceptable");
+
         return httpd_resp_send(req, NULL, 0);
     }
     else
