@@ -60,16 +60,23 @@ static httpd_handle_t start_http_server(void)
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 
-    const httpd_uri_t index_html_uri =
-        GET_URI_HANDLER("/", get_index_html_handler);
-    const httpd_uri_t main_wasm_uri =
-        GET_URI_HANDLER("/sara_charm_frontend_bg.wasm", get_main_wasm_handler);
-    const httpd_uri_t main_js_uri =
-        GET_URI_HANDLER("/sara_charm_frontend.js", get_main_js_handler);
     if (httpd_start(&server, &config) == ESP_OK) {
+        const httpd_uri_t index_html_uri = GET_URI_HANDLER(
+            "/",
+            get_index_html_handler
+        );
         httpd_register_uri_handler(server, &index_html_uri);
+        const httpd_uri_t main_wasm_uri = GET_URI_HANDLER(
+            "/sara_charm_frontend_bg.wasm",
+            get_main_wasm_handler
+        );
         httpd_register_uri_handler(server, &main_wasm_uri);
+        const httpd_uri_t main_js_uri = GET_URI_HANDLER(
+            "/sara_charm_frontend.js",
+            get_main_js_handler
+        );
         httpd_register_uri_handler(server, &main_js_uri);
+
         return server;
     }
 
