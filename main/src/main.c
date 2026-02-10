@@ -34,7 +34,7 @@ void app_main(void)
     ESP_ERROR_CHECK(ret);
 
     start_wifi_point();
-    start_server();
+    server_handle_t server = start_server();
 
     while (true) {
         if (gpio_get_level(POWER_BTN_GPIO_NUM) == 1) {
@@ -43,6 +43,9 @@ void app_main(void)
             }
 
             screen_task_stop(&screen_task);
+
+            stop_server(server);
+            stop_wifi_point();
 
             esp_deep_sleep_start();
         }

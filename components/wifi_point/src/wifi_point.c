@@ -35,3 +35,8 @@ void start_wifi_point(void)
     esp_wifi_set_config(WIFI_IF_AP, &config);
     esp_wifi_start();
 }
+
+void stop_wifi_point(void)
+{
+    esp_wifi_stop();
+}

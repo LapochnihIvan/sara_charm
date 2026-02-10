@@ -8,6 +8,7 @@
 typedef httpd_handle_t server_handle_t;
 
 server_handle_t start_server(void);
+void stop_server(server_handle_t);
 
 
 #endif //!SARA_CHARM_SERVER_SERVER_H

@@ -8,6 +8,7 @@
 
 #include <mdns.h>
 
+#include "esp_http_server.h"
 #include "utils/embed_file.h"
 
 
@@ -37,6 +38,13 @@ server_handle_t start_server(void)
     start_mdns_server();
 
     return start_http_server();
+}
+
+void stop_server(const server_handle_t server)
+{
+    mdns_free();
+
+    httpd_stop(server);
 }
 
 static void start_mdns_server(void)

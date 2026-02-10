@@ -3,6 +3,7 @@
 
 
 void start_wifi_point(void);
+void stop_wifi_point(void);
 
 
 #endif //!SARA_CHARM_SERVER_WIFI_POINT_H
