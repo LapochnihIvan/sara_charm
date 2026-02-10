@@ -6,13 +6,17 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <string.h>
 
+#include "esp_err.h"
 #include "screen.h"
 #include "wifi_point.h"
 #include "server.h"
 
 
 #define POWER_BTN_GPIO_NUM (GPIO_NUM_0)
+
+static esp_err_t init_nvs(void);
 
 void app_main(void)
 {
@@ -24,17 +28,14 @@ void app_main(void)
     screen_task_t screen_task;
     (void)screen_task_start(&screen_task);
 
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES ||
-        ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
-    {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
+    esp_err_t nvs_init_res = init_nvs();
 
-    start_wifi_point();
-    server_handle_t server = start_server();
+    server_handle_t server = NULL;
+    if (nvs_init_res == ESP_OK)
+    {
+        start_wifi_point();
+        server = start_server();
+    }
 
     while (true) {
         if (gpio_get_level(POWER_BTN_GPIO_NUM) == 1) {
@@ -44,12 +45,31 @@ void app_main(void)
 
             screen_task_stop(&screen_task);
 
-            stop_server(server);
-            stop_wifi_point();
+            if (nvs_init_res == ESP_OK)
+            {
+                stop_server(server);
+                stop_wifi_point();
+            }
 
             esp_deep_sleep_start();
         }
 
         vTaskDelay(1);
     }
+}
+
+static esp_err_t init_nvs(void)
+{
+    esp_err_t res = nvs_flash_init();
+    if (res == ESP_ERR_NVS_NO_FREE_PAGES ||
+        res == ESP_ERR_NVS_NEW_VERSION_FOUND)
+    {
+        res = nvs_flash_erase();
+        if (res != ESP_OK)
+        {
+            res = nvs_flash_init();
+        }
+    }
+
+    return res;
 }
