@@ -1,0 +1,124 @@
+menu "ST7789 driver configuration"
+	config MAX_GPIO_NUM
+		int
+		default 39 if IDF_TARGET_ESP32
+		default 46 if IDF_TARGET_ESP32S2
+		default 48 if IDF_TARGET_ESP32S3
+		default 18 if IDF_TARGET_ESP32C2
+		default 19 if IDF_TARGET_ESP32C3
+		default 30 if IDF_TARGET_ESP32C5
+		default 30 if IDF_TARGET_ESP32C6
+		default 24 if IDF_TARGET_ESP32C61
+		default 27 if IDF_TARGET_ESP32H2
+		default 56 if IDF_TARGET_ESP32P4
+
+	config ST7789_VCC_PIN_NUM
+		int "VCC pin"
+		range -1 MAX_GPIO_NUM
+		default -1
+		help
+			ST7789 power pin number. Set -1 if pin not used
+
+	config ST7789_SCK_PIN_NUM
+		int "SCK pin"
+		range 0 MAX_GPIO_NUM
+		default 0
+		help
+			SPI clock pin number
+
+	config ST7789_SDA_PIN_NUM
+		int "SDA pin"
+		range 0 MAX_GPIO_NUM
+		default 0
+		help
+			SPI data pin number
+
+	config ST7789_RES_PIN_NUM
+		int "RES pin"
+		range -1 MAX_GPIO_NUM
+		default -1
+		help
+			Reset pin number. Set -1 if pin not used
+
+	config ST7789_DC_PIN_NUM
+		int "DC pin"
+		range 0 MAX_GPIO_NUM
+		default 0
+		help
+			SPI data/command pin number
+
+	config ST7789_BLK_PIN_NUM
+		int "BLK pin"
+		range -1 MAX_GPIO_NUM
+		default -1
+		help
+			Blacklight pin number. Set -1 if pin not used
+
+	config ST7789_CS_PIN_NUM
+		int "CS pin"
+		range -1 MAX_GPIO_NUM
+		default -1
+		help
+			SPI chip select pin number. Set -1 if pin not used
+
+	config ST7789_SCREEN_WIDTH
+		int "Screen width"
+		range 0 999
+		default 240
+		help
+			The width resolution of the screen
+
+	config ST7789_SCREEN_HEIGHT
+		int "Screen height"
+		range 0 999
+		default 240
+		help
+			The height resolution of the screen
+
+	config ST7789_SPI_QUEUE_SIZE
+		int "SPI queue size"
+		range 1 254
+		default 5
+		help
+			Size of queue of SPI transactions
+
+	config ST7789_ACQUIRE_SPI_BUS
+		bool "Acquire SPI bus"
+		help
+			Flag for call spi_device_acquire_bus in st7789_init
+
+	choice ST7789_SPI_HOST
+		prompt "SPI host"
+		default ST7789_SPI2_HOST
+		help
+			Select SPI peripheral
+		config ST7789_SPI2_HOST
+			bool "SPI2_HOST"
+			help
+				Use SPI2
+		config ST7789_SPI3_HOST
+			depends on IDF_TARGET_ESP32 || IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3 || IDF_TARGET_ESP32P4
+			bool "SPI3_HOST"
+			help
+				Use SPI3
+	endchoice
+
+	choice ST7789_SPI_FREQ_MHZ
+		prompt "SPI frequency"
+		default ST7789_SPI_FREQ_80_MHZ
+		help
+			Select SPI frequency
+		config ST7789_SPI_FREQ_20_MHZ
+			bool "20 MHz"
+			help
+				Set 20 MHz SPI frequency
+		config ST7789_SPI_FREQ_40_MHZ
+			bool "40 MHz"
+			help
+				Set 40 MHz SPI frequency
+		config ST7789_SPI_FREQ_80_MHZ
+			bool "80 MHz"
+			help
+				Set 80 MHz SPI frequency
+	endchoice
+endmenu
