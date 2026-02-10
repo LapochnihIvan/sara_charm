@@ -21,8 +21,8 @@ void app_main(void)
 
     esp_deep_sleep_enable_gpio_wakeup(1 << POWER_BTN_GPIO_NUM, ESP_GPIO_WAKEUP_GPIO_HIGH);
 
-    TaskHandle_t screen_task_handle;
-    (void)start_screen_task(&screen_task_handle);
+    screen_task_t screen_task;
+    (void)screen_task_start(&screen_task);
 
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES ||
@@ -42,8 +42,7 @@ void app_main(void)
                 vTaskDelay(1);
             }
 
-            vTaskSuspend(screen_task_handle);
-            vTaskDelete(screen_task_handle);
+            screen_task_stop(&screen_task);
 
             esp_deep_sleep_start();
         }
