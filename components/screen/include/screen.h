@@ -13,8 +13,8 @@ typedef struct screen_task {
     st7789_control_t _lcd;
 } screen_task_t;
 
-BaseType_t start_screen_task(screen_task_t* self);
-void stop_screen_task(screen_task_t* self);
+BaseType_t screen_task_start(screen_task_t* self);
+void screen_task_stop(screen_task_t* self);
 
 
 #endif //!SARA_CHARM_SCREEN_SCREEN_H

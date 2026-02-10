@@ -19,7 +19,7 @@ void app_main(void)
     esp_deep_sleep_enable_gpio_wakeup(1 << POWER_BTN_GPIO_NUM, ESP_GPIO_WAKEUP_GPIO_HIGH);
 
     screen_task_t screen_task;
-    (void)start_screen_task(&screen_task);
+    (void)screen_task_start(&screen_task);
 
     while (true) {
         if (gpio_get_level(POWER_BTN_GPIO_NUM) == 1) {
@@ -27,7 +27,7 @@ void app_main(void)
                 vTaskDelay(1);
             }
 
-            stop_screen_task(&screen_task);
+            screen_task_stop(&screen_task);
 
             esp_deep_sleep_start();
         }

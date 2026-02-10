@@ -13,7 +13,7 @@ static void screen_task_impl(void* _args);
 static void screen_task_delete_callback(int _index, void* lcd_raw);
 static void gif_draw_callback(GIFDRAW* img_line);
 
-BaseType_t start_screen_task(screen_task_t* const self)
+BaseType_t screen_task_start(screen_task_t* const self)
 {
     st7789_init(&self->_lcd);
 
@@ -39,7 +39,7 @@ BaseType_t start_screen_task(screen_task_t* const self)
     return res;
 }
 
-void stop_screen_task(screen_task_t* const self)
+void screen_task_stop(screen_task_t* const self)
 {
     vTaskSuspend(self->_handle);
     vTaskDelete(self->_handle);
