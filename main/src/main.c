@@ -49,6 +49,7 @@ void app_main(void)
             {
                 stop_server(server);
                 stop_wifi_point();
+                nvs_flash_deinit();
             }
 
             esp_deep_sleep_start();
