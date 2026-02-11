@@ -9,7 +9,7 @@
 
 #include "utils/embed_file.h"
 
-static void screen_task_impl(void* _args);
+static void screen_task_impl(void* lcd_raw);
 static void screen_task_delete_callback(int _index, void* lcd_raw);
 static void gif_draw_callback(GIFDRAW* img_line);
 
@@ -76,6 +76,8 @@ static void screen_task_impl(void* lcd_raw)
 
 static void screen_task_delete_callback(int _index, void* const lcd_raw)
 {
+    (void)_index;
+
     st7789_control_t* const lcd = (st7789_control_t*)lcd_raw;
     st7789_deinit(lcd);
 }
