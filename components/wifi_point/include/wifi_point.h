@@ -4,12 +4,20 @@
 
 #include <stdint.h>
 
-#include <esp_err.h>
+#include <esp_wifi.h>
+#include <nvs.h>
 
 
-void start_wifi_point(void);
-void stop_wifi_point(void);
-esp_err_t change_wifi_point_settings(const char* ssid,
+typedef struct wifi_point
+{
+    esp_netif_t* _netif_handle;
+    nvs_handle_t _nvs_handle;
+} wifi_point_t;
+
+esp_err_t wifi_point_start(wifi_point_t* self);
+void wifi_point_stop(wifi_point_t* self);
+esp_err_t wifi_point_change_settings(wifi_point_t* self,
+                                     const char* ssid,
                                      uint8_t ssid_len,
                                      const char* password,
                                      uint8_t password_len);

@@ -28,10 +28,11 @@ void app_main(void)
 
     esp_err_t nvs_init_res = init_nvs();
 
+    wifi_point_t wifi_point;
     server_handle_t server = NULL;
     if (nvs_init_res == ESP_OK)
     {
-        start_wifi_point();
+        wifi_point_start(&wifi_point);
         server = start_server();
     }
 
@@ -46,7 +47,7 @@ void app_main(void)
             if (nvs_init_res == ESP_OK)
             {
                 stop_server(server);
-                stop_wifi_point();
+                wifi_point_stop(&wifi_point);
                 deinit_nvs();
             }
 
