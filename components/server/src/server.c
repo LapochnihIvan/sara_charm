@@ -8,8 +8,8 @@
 
 #include <mdns.h>
 
-#include "esp_http_server.h"
 #include "utils/embed_file.h"
+#include "utils/esp_try.h"
 
 
 #define ACCEPT_ENCODING_BUF_LEN (32)
@@ -23,7 +23,7 @@
     }
 
 static void start_mdns_server(void);
-static httpd_handle_t start_http_server(void);
+static esp_err_t start_http_server(server_handle_t server);
 static esp_err_t get_index_html_handler(httpd_req_t* req);
 static esp_err_t get_main_wasm_handler(httpd_req_t* req);
 static esp_err_t get_main_js_handler(httpd_req_t* req);
@@ -33,11 +33,11 @@ static esp_err_t get_file_handler_impl(httpd_req_t* req,
                                        size_t file_len);
 static bool is_client_accepts_gzip(httpd_req_t* req);
 
-server_handle_t start_server(void)
+esp_err_t start_server(const server_handle_t server)
 {
     start_mdns_server();
 
-    return start_http_server();
+    return start_http_server(server);
 }
 
 void stop_server(const server_handle_t server)
@@ -55,32 +55,29 @@ static void start_mdns_server(void)
     mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
 }
 
-static httpd_handle_t start_http_server(void)
+static esp_err_t start_http_server(const server_handle_t server)
 {
-    httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 
-    if (httpd_start(&server, &config) == ESP_OK) {
-        const httpd_uri_t index_html_uri = GET_URI_HANDLER(
-            "/",
-            get_index_html_handler
-        );
-        httpd_register_uri_handler(server, &index_html_uri);
-        const httpd_uri_t main_wasm_uri = GET_URI_HANDLER(
-            "/sara_charm_frontend_bg.wasm",
-            get_main_wasm_handler
-        );
-        httpd_register_uri_handler(server, &main_wasm_uri);
-        const httpd_uri_t main_js_uri = GET_URI_HANDLER(
-            "/sara_charm_frontend.js",
-            get_main_js_handler
-        );
-        httpd_register_uri_handler(server, &main_js_uri);
+    ESP_TRY(httpd_start(server, &config));
 
-        return server;
-    }
+    const httpd_uri_t index_html_uri = GET_URI_HANDLER(
+        "/",
+        get_index_html_handler
+    );
+    (void)httpd_register_uri_handler(server, &index_html_uri);
+    const httpd_uri_t main_wasm_uri = GET_URI_HANDLER(
+        "/sara_charm_frontend_bg.wasm",
+        get_main_wasm_handler
+    );
+    (void)httpd_register_uri_handler(server, &main_wasm_uri);
+    const httpd_uri_t main_js_uri = GET_URI_HANDLER(
+        "/sara_charm_frontend.js",
+        get_main_js_handler
+    );
+    (void)httpd_register_uri_handler(server, &main_js_uri);
 
-    return NULL;
+    return ESP_OK;
 }
 
 static esp_err_t get_index_html_handler(httpd_req_t* const req)
