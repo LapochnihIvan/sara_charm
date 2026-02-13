@@ -51,7 +51,10 @@ esp_err_t wifi_point_start(wifi_point_t* const self)
 
 void wifi_point_stop(wifi_point_t* const self)
 {
+    deauth_all_users();
     (void)esp_wifi_stop();
+    (void)esp_wifi_deinit();
+    esp_netif_destroy(self->_netif_handle);
 }
 
 esp_err_t wifi_point_change_settings(wifi_point_t* const self,
