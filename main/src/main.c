@@ -5,16 +5,18 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#include <string.h>
 
-#include "esp_err.h"
 #include "screen.h"
 #include "wifi_point.h"
 #include "server.h"
 #include "utils/nvs.h"
+#include "utils/esp_try.h"
 
 
 #define POWER_BTN_GPIO_NUM (GPIO_NUM_0)
+
+static esp_err_t start_server_part(wifi_point_t* wifi_point,
+                                   server_handle_t server);
 
 void app_main(void)
 {
@@ -26,15 +28,9 @@ void app_main(void)
     screen_task_t screen_task;
     (void)screen_task_start(&screen_task);
 
-    esp_err_t nvs_init_res = init_nvs();
-
     wifi_point_t wifi_point;
     server_handle_t server = NULL;
-    if (nvs_init_res == ESP_OK)
-    {
-        wifi_point_start(&wifi_point);
-        server = start_server();
-    }
+    const esp_err_t server_init_res = start_server_part(&wifi_point, server);
 
     while (true) {
         if (gpio_get_level(POWER_BTN_GPIO_NUM) == 1) {
@@ -44,7 +40,7 @@ void app_main(void)
 
             screen_task_stop(&screen_task);
 
-            if (nvs_init_res == ESP_OK)
+            if (server_init_res == ESP_OK)
             {
                 stop_server(server);
                 wifi_point_stop(&wifi_point);
@@ -56,4 +52,27 @@ void app_main(void)
 
         vTaskDelay(1);
     }
+}
+
+static esp_err_t start_server_part(wifi_point_t* const wifi_point,
+                                   const server_handle_t server)
+{
+    ESP_TRY(init_nvs());
+
+    esp_err_t res = wifi_point_start(wifi_point);
+    if (res != ESP_OK)
+    {
+        deinit_nvs();
+
+        return res;
+    }
+
+    res = start_server(server);
+    if (res != ESP_OK)
+    {
+        wifi_point_stop(wifi_point);
+        deinit_nvs();
+    }
+
+    return res;
 }
