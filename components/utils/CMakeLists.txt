@@ -1,4 +1,5 @@
 idf_component_register(
-    SRCS ""
+    SRCS "src/nvs.c"
     INCLUDE_DIRS "include"
+    PRIV_REQUIRES "nvs_flash"
 )

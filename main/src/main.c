@@ -2,7 +2,6 @@
 
 #include <driver/gpio.h>
 #include <esp_sleep.h>
-#include <nvs_flash.h>
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -12,11 +11,10 @@
 #include "screen.h"
 #include "wifi_point.h"
 #include "server.h"
+#include "utils/nvs.h"
 
 
 #define POWER_BTN_GPIO_NUM (GPIO_NUM_0)
-
-static esp_err_t init_nvs(void);
 
 void app_main(void)
 {
@@ -49,7 +47,7 @@ void app_main(void)
             {
                 stop_server(server);
                 stop_wifi_point();
-                nvs_flash_deinit();
+                deinit_nvs();
             }
 
             esp_deep_sleep_start();
@@ -57,20 +55,4 @@ void app_main(void)
 
         vTaskDelay(1);
     }
-}
-
-static esp_err_t init_nvs(void)
-{
-    esp_err_t res = nvs_flash_init();
-    if (res == ESP_ERR_NVS_NO_FREE_PAGES ||
-        res == ESP_ERR_NVS_NEW_VERSION_FOUND)
-    {
-        res = nvs_flash_erase();
-        if (res != ESP_OK)
-        {
-            res = nvs_flash_init();
-        }
-    }
-
-    return res;
 }
