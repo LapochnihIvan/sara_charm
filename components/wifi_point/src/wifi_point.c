@@ -2,6 +2,8 @@
 
 #include <string.h>
 
+#include <nvs.h>
+
 #include "utils/esp_try.h"
 
 
@@ -12,7 +14,7 @@
 #define NVS_PASSWORD_KEY ("pwd")
 
 static esp_err_t init_netif(void);
-static esp_err_t start_wifi(nvs_handle_t nvs_handle);
+static esp_err_t start_wifi(void);
 static esp_err_t save_ssid(nvs_handle_t nvs_handle,
                            const char* data,
                            uint8_t len);
@@ -27,23 +29,14 @@ static inline void deauth_all_users(void);
 
 esp_err_t wifi_point_start(wifi_point_t* const self)
 {
-    ESP_TRY(nvs_open(NVS_NAMESPACE, NVS_READWRITE, &self->_nvs_handle));
-
-    esp_err_t res = init_netif();
-    if (res != ESP_OK)
-    {
-        nvs_close(self->_nvs_handle);
-
-        return res;
-    }
+    ESP_TRY(init_netif());
 
     self->_netif_handle = esp_netif_create_default_wifi_ap();
 
-    res = start_wifi(self->_nvs_handle);
+    esp_err_t res = start_wifi();
     if (res != ESP_OK)
     {
         esp_netif_destroy(self->_netif_handle);
-        nvs_close(self->_nvs_handle);
     }
 
     return res;
@@ -57,8 +50,7 @@ void wifi_point_stop(wifi_point_t* const self)
     esp_netif_destroy(self->_netif_handle);
 }
 
-esp_err_t wifi_point_change_settings(wifi_point_t* const self,
-                                     const char* const ssid,
+esp_err_t wifi_point_change_settings(const char* const ssid,
                                      const uint8_t ssid_len,
                                      const char* const password,
                                      const uint8_t password_len)
@@ -72,8 +64,18 @@ esp_err_t wifi_point_change_settings(wifi_point_t* const self,
     memcpy((void*)wifi_config.ap.password, (const void*)password, password_len);
     wifi_config.ap.password[password_len] = '\0';
 
-    ESP_TRY(save_ssid(self->_nvs_handle, ssid, ssid_len));
-    ESP_TRY(save_password(self->_nvs_handle, password, password_len));
+    nvs_handle_t nvs_handle;
+    ESP_TRY(nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs_handle));
+
+    esp_err_t res = save_ssid(nvs_handle, ssid, ssid_len);
+    if (res == ESP_OK)
+    {
+        res = save_password(nvs_handle, password, password_len);
+    }
+
+    nvs_close(nvs_handle);
+
+    ESP_TRY(res);
 
     deauth_all_users();
 
@@ -87,7 +89,7 @@ static esp_err_t init_netif(void)
     return esp_event_loop_create_default();
 }
 
-static esp_err_t start_wifi(const nvs_handle_t nvs_handle)
+static esp_err_t start_wifi(void)
 {
     wifi_init_config_t init_config = WIFI_INIT_CONFIG_DEFAULT();
     ESP_TRY(esp_wifi_init(&init_config));
@@ -111,6 +113,9 @@ static esp_err_t start_wifi(const nvs_handle_t nvs_handle)
         },
     };
 
+    nvs_handle_t nvs_handle;
+    ESP_TRY(nvs_open(NVS_NAMESPACE, NVS_READONLY, &nvs_handle));
+
     size_t len;
     if (load_ssid(nvs_handle, config.ap.ssid, &len) == ESP_OK)
     {
@@ -120,6 +125,8 @@ static esp_err_t start_wifi(const nvs_handle_t nvs_handle)
     {
         config.ap.password[len] = '\0';
     }
+
+    nvs_close(nvs_handle);
 
     ESP_TRY(esp_wifi_set_config(WIFI_IF_AP, &config));
 
