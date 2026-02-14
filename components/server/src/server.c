@@ -144,11 +144,11 @@ static bool is_client_accepts_gzip(httpd_req_t* const req)
 {
     char hdr_buf[ACCEPT_ENCODING_BUF_LEN];
 
-    httpd_req_get_hdr_value_str(
+    (void)httpd_req_get_hdr_value_str(
         req,
         "Accept-Encoding",
         hdr_buf,
-        ACCEPT_ENCODING_BUF_LEN - 1
+        ACCEPT_ENCODING_BUF_LEN
     );
 
     return strstr(hdr_buf, "gzip") != NULL || strchr(hdr_buf, '*') != NULL;
