@@ -21,9 +21,16 @@ static esp_err_t start_http_server(server_handle_t server);
 static void add_get_handler(server_handle_t server,
                             const char* uri,
                             http_handler_t handler);
+static void add_post_handler(server_handle_t server,
+                            const char* uri,
+                            http_handler_t handler);
 static esp_err_t get_index_html_handler(httpd_req_t* req);
 static esp_err_t get_main_wasm_handler(httpd_req_t* req);
 static esp_err_t get_main_js_handler(httpd_req_t* req);
+static void add_handler_impl(server_handle_t server,
+                             const char* uri,
+                             httpd_method_t method,
+                             http_handler_t handler);
 static esp_err_t get_file_handler_impl(httpd_req_t* req,
                                        const char* content_type,
                                        const uint8_t* file,
@@ -73,13 +80,14 @@ static void add_get_handler(const server_handle_t server,
                             const char* const uri,
                             const http_handler_t handler)
 {
-    const httpd_uri_t uri_handler = {
-        .uri      = uri,
-        .method   = HTTP_GET,
-        .handler  = handler,
-        .user_ctx = NULL
-    };
-    (void)httpd_register_uri_handler(server, &uri_handler);
+    add_handler_impl(server, uri, HTTP_GET, handler);
+}
+
+static void add_post_handler(const server_handle_t server,
+                            const char* const uri,
+                            const http_handler_t handler)
+{
+    add_handler_impl(server, uri, HTTP_POST, handler);
 }
 
 static esp_err_t get_index_html_handler(httpd_req_t* const req)
@@ -118,6 +126,20 @@ static esp_err_t get_main_js_handler(httpd_req_t* const req)
         main_js.data,
         main_js.len
     );
+}
+
+static void add_handler_impl(const server_handle_t server,
+                             const char* const uri,
+                             const httpd_method_t method,
+                             const http_handler_t handler)
+{
+    const httpd_uri_t uri_handler = {
+        .uri      = uri,
+        .method   = method,
+        .handler  = handler,
+        .user_ctx = NULL
+    };
+    (void)httpd_register_uri_handler(server, &uri_handler);
 }
 
 static esp_err_t get_file_handler_impl(httpd_req_t* const req,
