@@ -114,7 +114,7 @@ static esp_err_t start_wifi(void)
     };
 
     nvs_handle_t nvs_handle;
-    ESP_TRY(nvs_open(NVS_NAMESPACE, NVS_READONLY, &nvs_handle));
+    ESP_TRY(nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs_handle));
 
     size_t len;
     if (load_ssid(nvs_handle, config.ap.ssid, &len) == ESP_OK)
