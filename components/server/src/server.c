@@ -240,17 +240,13 @@ static esp_err_t get_file_handler_impl(httpd_req_t* const req,
 {
     if (!is_client_accepts_gzip(req))
     {
-        httpd_resp_set_status(req, "406 Not Acceptable");
-
-        return httpd_resp_send(req, NULL, 0);
+        return httpd_resp_send_custom_err(req, "406 Not Acceptable", NULL);
     }
-    else
-    {
-        httpd_resp_set_type(req, content_type);
-        httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
 
-        return httpd_resp_send(req, (const char *)file, file_len);
-    }
+    httpd_resp_set_type(req, content_type);
+    httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
+
+    return httpd_resp_send(req, (const char *)file, file_len);
 }
 
 static bool is_client_accepts_gzip(httpd_req_t* const req)
