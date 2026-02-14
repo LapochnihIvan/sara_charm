@@ -1,6 +1,5 @@
 #include "server.h"
 
-#include <stdbool.h>
 #include <string.h>
 
 #include <freertos/FreeRTOS.h>
@@ -8,8 +7,13 @@
 
 #include <mdns.h>
 
+#include <pb_decode.h>
+
+#include "wifi_point.h"
 #include "utils/embed_file.h"
 #include "utils/esp_try.h"
+
+#include "requests.pb.h"
 
 
 #define ACCEPT_ENCODING_BUF_LEN (32)
@@ -27,6 +31,12 @@ static void add_post_handler(server_handle_t server,
 static esp_err_t get_index_html_handler(httpd_req_t* req);
 static esp_err_t get_main_wasm_handler(httpd_req_t* req);
 static esp_err_t get_main_js_handler(httpd_req_t* req);
+static esp_err_t change_wifi_settings_handler(httpd_req_t* req);
+static esp_err_t receive_proto(void* msg,
+                               uint8_t* msg_buf,
+                               size_t msg_len,
+                               const pb_msgdesc_t* msg_info,
+                               httpd_req_t* req);
 static void add_handler_impl(server_handle_t server,
                              const char* uri,
                              httpd_method_t method,
@@ -72,6 +82,11 @@ static esp_err_t start_http_server(const server_handle_t server)
         get_main_wasm_handler
     );
     add_get_handler(server, "/sara_charm_frontend.js", get_main_js_handler);
+    add_post_handler(
+        server,
+        "/api/wifi_settings",
+        change_wifi_settings_handler
+    );
 
     return ESP_OK;
 }
@@ -126,6 +141,82 @@ static esp_err_t get_main_js_handler(httpd_req_t* const req)
         main_js.data,
         main_js.len
     );
+}
+
+static esp_err_t change_wifi_settings_handler(httpd_req_t* const req)
+{
+    if (req->content_len > requests_WiFiSettings_size)
+    {
+        httpd_resp_send_err(req, HTTPD_413_CONTENT_TOO_LARGE, NULL);
+    }
+
+    requests_WiFiSettings settings;
+    uint8_t msg_buf[requests_WiFiSettings_size];
+    esp_err_t res = receive_proto(
+        (void*)&settings, msg_buf,
+        requests_WiFiSettings_size,
+        &requests_WiFiSettings_msg,
+        req
+    );
+    if (res != ESP_OK)
+    {
+        return ESP_OK;
+    }
+
+    res = wifi_point_change_settings(
+        settings.ssid,
+        strlen(settings.ssid),
+        settings.password,
+        strlen(settings.password)
+    );
+
+    if (res != ESP_OK)
+    {
+        return httpd_resp_send_err(
+            req,
+            res == ESP_ERR_WIFI_PASSWORD ? 
+                HTTPD_400_BAD_REQUEST :
+                HTTPD_500_INTERNAL_SERVER_ERROR, 
+            esp_err_to_name(res)
+        );
+    }
+
+    return httpd_resp_send(req, NULL, 0);
+}
+
+static esp_err_t receive_proto(void* const msg,
+                               uint8_t* const msg_buf,
+                               const size_t msg_len,
+                               const pb_msgdesc_t* const msg_info,
+                               httpd_req_t* const req)
+{
+    const int receive_res = httpd_req_recv(req, (char*)msg_buf, msg_len);
+    if (receive_res == HTTPD_SOCK_ERR_TIMEOUT)
+    {
+        ESP_TRY(httpd_resp_send_408(req));
+
+        return ESP_ERR_TIMEOUT;
+    }
+    else if (receive_res == HTTPD_SOCK_ERR_FAIL)
+    {
+        ESP_TRY(httpd_resp_send_500(req));
+
+        return ESP_FAIL;
+    }
+
+    pb_istream_t proto_decoder = pb_istream_from_buffer(msg_buf, msg_len);
+    if (!pb_decode(&proto_decoder, &requests_WiFiSettings_msg, msg))
+    {
+        ESP_TRY(httpd_resp_send_err(
+            req,
+            HTTPD_400_BAD_REQUEST,
+            PB_GET_ERROR(&proto_decoder)
+        ));
+
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    return ESP_OK;
 }
 
 static void add_handler_impl(const server_handle_t server,
