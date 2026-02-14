@@ -11,7 +11,7 @@ esp_err_t init_nvs(void)
         res == ESP_ERR_NVS_NEW_VERSION_FOUND)
     {
         res = nvs_flash_erase();
-        if (res != ESP_OK)
+        if (res == ESP_OK)
         {
             res = nvs_flash_init();
         }
