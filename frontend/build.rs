@@ -1,7 +1,10 @@
 use std::{fs::File, io::Write};
 
 fn main() -> std::io::Result<()> {
-    prost_build::compile_protos(&["../proto/requests.proto"], &["../proto"])?;
+    prost_build::compile_protos(
+        &["../proto/requests.proto"],
+        &["../proto", "../nanopb/generator/proto"],
+    )?;
 
     let path = format!("{}/gear_svg_nested", std::env::var("OUT_DIR").unwrap());
     let mut gear_svg_file = File::create(path)?;

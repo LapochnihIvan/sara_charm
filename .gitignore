@@ -3,6 +3,7 @@ managed_components/
 dependencies.lock
 .cache/
 sdkconfig.old
+nanopb/
 frontend/target/
 frontend/dist/
 frontend/Cargo.lock
