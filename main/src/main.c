@@ -16,8 +16,8 @@
 #define POWER_BTN_GPIO_NUM (GPIO_NUM_0)
 
 static esp_err_t start_server_part(wifi_point_t* wifi_point,
-                                   server_handle_t server);
-
+                                   server_handle_t* server);
+#include "esp_log.h"
 void app_main(void)
 {
     gpio_set_direction(POWER_BTN_GPIO_NUM, GPIO_MODE_INPUT);
@@ -30,7 +30,12 @@ void app_main(void)
 
     wifi_point_t wifi_point;
     server_handle_t server = NULL;
-    const esp_err_t server_init_res = start_server_part(&wifi_point, server);
+    const esp_err_t server_init_res = start_server_part(&wifi_point, &server);
+
+    if (server_init_res != ESP_OK)
+    {
+        ESP_LOGE("", "%s", esp_err_to_name(server_init_res));
+    }
 
     while (true) {
         if (gpio_get_level(POWER_BTN_GPIO_NUM) == 1) {
@@ -55,7 +60,7 @@ void app_main(void)
 }
 
 static esp_err_t start_server_part(wifi_point_t* const wifi_point,
-                                   const server_handle_t server)
+                                   server_handle_t* const server)
 {
     ESP_TRY(init_nvs());
 

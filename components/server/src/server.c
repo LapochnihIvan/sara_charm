@@ -21,7 +21,7 @@
 typedef esp_err_t (*http_handler_t)(httpd_req_t*);
 
 static esp_err_t start_mdns_server(void);
-static esp_err_t start_http_server(server_handle_t server);
+static esp_err_t start_http_server(server_handle_t* server);
 static void add_get_handler(server_handle_t server,
                             const char* uri,
                             http_handler_t handler);
@@ -47,7 +47,7 @@ static esp_err_t get_file_handler_impl(httpd_req_t* req,
                                        size_t file_len);
 static bool is_client_accepts_gzip(httpd_req_t* req);
 
-esp_err_t start_server(const server_handle_t server)
+esp_err_t start_server(server_handle_t* const server)
 {
     ESP_TRY(start_mdns_server());
 
@@ -76,21 +76,21 @@ static esp_err_t start_mdns_server(void)
     return mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
 }
 
-static esp_err_t start_http_server(const server_handle_t server)
+static esp_err_t start_http_server(server_handle_t* const server)
 {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-
+    
     ESP_TRY(httpd_start(server, &config));
 
-    add_get_handler(server, "/", get_index_html_handler);
+    add_get_handler(*server, "/", get_index_html_handler);
     add_get_handler(
-        server,
+        *server,
         "/sara_charm_frontend_bg.wasm",
         get_main_wasm_handler
     );
-    add_get_handler(server, "/sara_charm_frontend.js", get_main_js_handler);
+    add_get_handler(*server, "/sara_charm_frontend.js", get_main_js_handler);
     add_post_handler(
-        server,
+        *server,
         "/api/wifi_settings",
         change_wifi_settings_handler
     );

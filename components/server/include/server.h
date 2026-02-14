@@ -7,7 +7,7 @@
 
 typedef httpd_handle_t server_handle_t;
 
-esp_err_t start_server(server_handle_t server);
+esp_err_t start_server(server_handle_t* server);
 void stop_server(server_handle_t server);
 
 
