@@ -12,7 +12,7 @@ idf_component_register(
 include(FetchContent)
 
 FetchContent_Populate(
-    mydep
+    nanopb
     GIT_REPOSITORY https://github.com/nanopb/nanopb.git
     GIT_TAG        nanopb-0.4.9.1
     SOURCE_DIR "${CMAKE_SOURCE_DIR}/nanopb"
