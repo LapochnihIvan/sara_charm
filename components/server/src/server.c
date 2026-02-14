@@ -20,7 +20,7 @@
 
 typedef esp_err_t (*http_handler_t)(httpd_req_t*);
 
-static void start_mdns_server(void);
+static esp_err_t start_mdns_server(void);
 static esp_err_t start_http_server(server_handle_t server);
 static void add_get_handler(server_handle_t server,
                             const char* uri,
@@ -49,9 +49,15 @@ static bool is_client_accepts_gzip(httpd_req_t* req);
 
 esp_err_t start_server(const server_handle_t server)
 {
-    start_mdns_server();
+    ESP_TRY(start_mdns_server());
 
-    return start_http_server(server);
+    const esp_err_t res = start_http_server(server);
+    if (res != ESP_OK)
+    {
+        mdns_free();
+    }
+
+    return res;
 }
 
 void stop_server(const server_handle_t server)
@@ -61,12 +67,13 @@ void stop_server(const server_handle_t server)
     httpd_stop(server);
 }
 
-static void start_mdns_server(void)
+static esp_err_t start_mdns_server(void)
 {
-    mdns_init();
-    mdns_hostname_set("sara_charm");
-    mdns_instance_name_set("Sara charm");
-    mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
+    ESP_TRY(mdns_init());
+    (void)mdns_hostname_set("sara_charm");
+    (void)mdns_instance_name_set("Sara charm");
+
+    return mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0);
 }
 
 static esp_err_t start_http_server(const server_handle_t server)
