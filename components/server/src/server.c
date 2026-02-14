@@ -14,16 +14,13 @@
 
 #define ACCEPT_ENCODING_BUF_LEN (32)
 
-#define GET_URI_HANDLER(uri_path, handler_func)  \
-    {                                            \
-        .uri      = (uri_path),                  \
-        .method   = HTTP_GET,                    \
-        .handler  = (handler_func),              \
-        .user_ctx = NULL                         \
-    }
+typedef esp_err_t (*http_handler_t)(httpd_req_t*);
 
 static void start_mdns_server(void);
 static esp_err_t start_http_server(server_handle_t server);
+static void add_get_handler(server_handle_t server,
+                            const char* uri,
+                            http_handler_t handler);
 static esp_err_t get_index_html_handler(httpd_req_t* req);
 static esp_err_t get_main_wasm_handler(httpd_req_t* req);
 static esp_err_t get_main_js_handler(httpd_req_t* req);
@@ -61,23 +58,28 @@ static esp_err_t start_http_server(const server_handle_t server)
 
     ESP_TRY(httpd_start(server, &config));
 
-    const httpd_uri_t index_html_uri = GET_URI_HANDLER(
-        "/",
-        get_index_html_handler
-    );
-    (void)httpd_register_uri_handler(server, &index_html_uri);
-    const httpd_uri_t main_wasm_uri = GET_URI_HANDLER(
+    add_get_handler(server, "/", get_index_html_handler);
+    add_get_handler(
+        server,
         "/sara_charm_frontend_bg.wasm",
         get_main_wasm_handler
     );
-    (void)httpd_register_uri_handler(server, &main_wasm_uri);
-    const httpd_uri_t main_js_uri = GET_URI_HANDLER(
-        "/sara_charm_frontend.js",
-        get_main_js_handler
-    );
-    (void)httpd_register_uri_handler(server, &main_js_uri);
+    add_get_handler(server, "/sara_charm_frontend.js", get_main_js_handler);
 
     return ESP_OK;
+}
+
+static void add_get_handler(const server_handle_t server,
+                            const char* const uri,
+                            const http_handler_t handler)
+{
+    const httpd_uri_t uri_handler = {
+        .uri      = uri,
+        .method   = HTTP_GET,
+        .handler  = handler,
+        .user_ctx = NULL
+    };
+    (void)httpd_register_uri_handler(server, &uri_handler);
 }
 
 static esp_err_t get_index_html_handler(httpd_req_t* const req)
