@@ -114,16 +114,17 @@ static esp_err_t start_wifi(void)
     };
 
     nvs_handle_t nvs_handle;
-    ESP_TRY(nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs_handle));
-
-    size_t len;
-    if (load_ssid(nvs_handle, config.ap.ssid, &len) == ESP_OK)
+    if (nvs_open(NVS_NAMESPACE, NVS_READONLY, &nvs_handle) == ESP_OK)
     {
-        config.ap.ssid_len = (uint8_t)len;
-    }
-    if (load_password(nvs_handle, config.ap.password, &len) == ESP_OK)
-    {
-        config.ap.password[len] = '\0';
+        size_t len;
+        if (load_ssid(nvs_handle, config.ap.ssid, &len) == ESP_OK)
+        {
+            config.ap.ssid_len = (uint8_t)len;
+        }
+        if (load_password(nvs_handle, config.ap.password, &len) == ESP_OK)
+        {
+            config.ap.password[len] = '\0';
+        }
     }
 
     nvs_close(nvs_handle);
