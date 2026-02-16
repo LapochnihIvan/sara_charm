@@ -7,6 +7,7 @@
 
 #include <mdns.h>
 
+#include <pb_encode.h>
 #include <pb_decode.h>
 
 #include "wifi_point.h"
@@ -31,7 +32,13 @@ static void add_post_handler(server_handle_t server,
 static esp_err_t get_index_html_handler(httpd_req_t* req);
 static esp_err_t get_main_wasm_handler(httpd_req_t* req);
 static esp_err_t get_main_js_handler(httpd_req_t* req);
+static esp_err_t get_wifi_settings_handler(httpd_req_t* req);
 static esp_err_t change_wifi_settings_handler(httpd_req_t* req);
+static esp_err_t send_proto(const void* msg,
+                            uint8_t* msg_buf,
+                            size_t msg_len,
+                            const pb_msgdesc_t* msg_info,
+                            httpd_req_t* req);
 static esp_err_t receive_proto(void* msg,
                                uint8_t* msg_buf,
                                size_t msg_len,
@@ -89,6 +96,8 @@ static esp_err_t start_http_server(server_handle_t* const server)
         get_main_wasm_handler
     );
     add_get_handler(*server, "/sara_charm_frontend.js", get_main_js_handler);
+
+    add_get_handler(*server, "/api/wifi_settings", get_wifi_settings_handler);
     add_post_handler(
         *server,
         "/api/wifi_settings",
@@ -150,6 +159,21 @@ static esp_err_t get_main_js_handler(httpd_req_t* const req)
     );
 }
 
+static esp_err_t get_wifi_settings_handler(httpd_req_t* const req)
+{
+    requests_WiFiSettings settings;
+    wifi_point_get_settings(settings.ssid, settings.password);
+
+    uint8_t msg_buf[requests_WiFiSettings_size];
+    return send_proto(
+        (void*)&settings,
+        msg_buf,
+        requests_WiFiSettings_size,
+        &requests_WiFiSettings_msg,
+        req
+    );
+}
+
 static esp_err_t change_wifi_settings_handler(httpd_req_t* const req)
 {
     if (req->content_len > requests_WiFiSettings_size)
@@ -189,6 +213,18 @@ static esp_err_t change_wifi_settings_handler(httpd_req_t* const req)
     }
 
     return httpd_resp_send(req, NULL, 0);
+}
+
+static esp_err_t send_proto(const void* const msg,
+                            uint8_t* const msg_buf,
+                            const size_t msg_len,
+                            const pb_msgdesc_t* const msg_info,
+                            httpd_req_t* const req)
+{
+    pb_ostream_t proto_encoder = pb_ostream_from_buffer(msg_buf, msg_len);
+    pb_encode(&proto_encoder, msg_info, msg);
+
+    return httpd_resp_send(req, (char*)msg, msg_len);
 }
 
 static esp_err_t receive_proto(void* const msg,
