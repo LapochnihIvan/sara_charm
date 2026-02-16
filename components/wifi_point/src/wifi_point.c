@@ -50,19 +50,29 @@ void wifi_point_stop(wifi_point_t* const self)
     esp_netif_destroy(self->_netif_handle);
 }
 
+void wifi_point_get_settings(char* const ssid, char* const password)
+{
+    wifi_config_t config;
+    (void)esp_wifi_get_config(ESP_IF_WIFI_AP, &config);
+
+    memcpy((void*)ssid, (void*)config.ap.ssid, config.ap.ssid_len);
+    ssid[config.ap.ssid_len] = '\0';
+    strlcpy(password, (char*)config.ap.password, MAX_PASSPHRASE_LEN);
+}
+
 esp_err_t wifi_point_change_settings(const char* const ssid,
                                      const uint8_t ssid_len,
                                      const char* const password,
                                      const uint8_t password_len)
 {
-    wifi_config_t wifi_config;
-    (void)esp_wifi_get_config(ESP_IF_WIFI_AP, &wifi_config);
+    wifi_config_t config;
+    (void)esp_wifi_get_config(ESP_IF_WIFI_AP, &config);
 
-    memcpy((void*)wifi_config.ap.ssid, (const void*)ssid, ssid_len);
-    wifi_config.ap.ssid_len = ssid_len;
+    memcpy((void*)config.ap.ssid, (const void*)ssid, ssid_len);
+    config.ap.ssid_len = ssid_len;
 
-    memcpy((void*)wifi_config.ap.password, (const void*)password, password_len);
-    wifi_config.ap.password[password_len] = '\0';
+    memcpy((void*)config.ap.password, (const void*)password, password_len);
+    config.ap.password[password_len] = '\0';
 
     nvs_handle_t nvs_handle;
     ESP_TRY(nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs_handle));
@@ -79,7 +89,7 @@ esp_err_t wifi_point_change_settings(const char* const ssid,
 
     deauth_all_users();
 
-    return esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config);
+    return esp_wifi_set_config(ESP_IF_WIFI_AP, &config);
 }
 
 static esp_err_t init_netif(void)

@@ -12,6 +12,7 @@ typedef struct wifi_point
 
 esp_err_t wifi_point_start(wifi_point_t* self);
 void wifi_point_stop(wifi_point_t* self);
+void wifi_point_get_settings(char* ssid, char* password);
 esp_err_t wifi_point_change_settings(const char* ssid,
                                      uint8_t ssid_len,
                                      const char* password,
