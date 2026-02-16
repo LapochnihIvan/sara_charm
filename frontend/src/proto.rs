@@ -1,3 +1,1 @@
-pub mod requests {
-    include!(concat!(env!("OUT_DIR"), "/requests.rs"));
-}
+include!(concat!(env!("OUT_DIR"), "/requests.rs"));

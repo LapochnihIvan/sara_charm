@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "nanopb.proto";
 
-package requests;
+package messages;
 
 message WiFiSettings {
     string ssid = 1 [(nanopb).max_size = 33];

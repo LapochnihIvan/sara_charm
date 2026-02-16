@@ -5,7 +5,7 @@ use yew_hooks::prelude::*;
 
 use prost::Message;
 
-use crate::proto::requests::WiFiSettings;
+use crate::proto::WiFiSettings;
 use crate::utils::get_css::get_css;
 
 #[function_component(Settings)]

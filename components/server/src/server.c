@@ -14,7 +14,7 @@
 #include "utils/embed_file.h"
 #include "utils/esp_try.h"
 
-#include "requests.pb.h"
+#include "messages.pb.h"
 
 
 #define ACCEPT_ENCODING_BUF_LEN (32)
@@ -161,32 +161,32 @@ static esp_err_t get_main_js_handler(httpd_req_t* const req)
 
 static esp_err_t get_wifi_settings_handler(httpd_req_t* const req)
 {
-    requests_WiFiSettings settings;
+    messages_WiFiSettings settings;
     wifi_point_get_settings(settings.ssid, settings.password);
 
-    uint8_t msg_buf[requests_WiFiSettings_size];
+    uint8_t msg_buf[messages_WiFiSettings_size];
     return send_proto(
         (void*)&settings,
         msg_buf,
-        requests_WiFiSettings_size,
-        &requests_WiFiSettings_msg,
+        messages_WiFiSettings_size,
+        &messages_WiFiSettings_msg,
         req
     );
 }
 
 static esp_err_t change_wifi_settings_handler(httpd_req_t* const req)
 {
-    if (req->content_len > requests_WiFiSettings_size)
+    if (req->content_len > messages_WiFiSettings_size)
     {
         httpd_resp_send_err(req, HTTPD_413_CONTENT_TOO_LARGE, NULL);
     }
 
-    requests_WiFiSettings settings;
-    uint8_t msg_buf[requests_WiFiSettings_size];
+    messages_WiFiSettings settings;
+    uint8_t msg_buf[messages_WiFiSettings_size];
     esp_err_t res = receive_proto(
         (void*)&settings, msg_buf,
-        requests_WiFiSettings_size,
-        &requests_WiFiSettings_msg,
+        messages_WiFiSettings_size,
+        &messages_WiFiSettings_msg,
         req
     );
     if (res != ESP_OK)
@@ -248,7 +248,7 @@ static esp_err_t receive_proto(void* const msg,
     }
 
     pb_istream_t proto_decoder = pb_istream_from_buffer(msg_buf, msg_len);
-    if (!pb_decode(&proto_decoder, &requests_WiFiSettings_msg, msg))
+    if (!pb_decode(&proto_decoder, &messages_WiFiSettings_msg, msg))
     {
         ESP_TRY(httpd_resp_send_err(
             req,
