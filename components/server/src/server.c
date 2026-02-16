@@ -283,7 +283,11 @@ static esp_err_t get_file_handler_impl(httpd_req_t* const req,
 {
     if (!is_client_accepts_gzip(req))
     {
-        return httpd_resp_send_custom_err(req, "406 Not Acceptable", NULL);
+        return httpd_resp_send_custom_err(
+            req,
+            "406 Not Acceptable",
+            "Only gzip encoding supported"
+        );
     }
 
     httpd_resp_set_type(req, content_type);
