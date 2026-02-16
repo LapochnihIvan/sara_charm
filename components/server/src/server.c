@@ -222,7 +222,7 @@ static esp_err_t send_proto(const void* const msg,
                             httpd_req_t* const req)
 {
     pb_ostream_t proto_encoder = pb_ostream_from_buffer(msg_buf, msg_len);
-    pb_encode(&proto_encoder, msg_info, msg);
+    (void)pb_encode(&proto_encoder, msg_info, msg);
 
     return httpd_resp_send(req, (char*)msg, msg_len);
 }
