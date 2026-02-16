@@ -2,7 +2,7 @@ use std::{fs::File, io::Write};
 
 fn main() -> std::io::Result<()> {
     prost_build::compile_protos(
-        &["../proto/requests.proto"],
+        &["../proto/messages.proto"],
         &["../proto", "../nanopb/generator/proto"],
     )?;
 
