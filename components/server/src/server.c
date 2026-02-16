@@ -224,7 +224,7 @@ static esp_err_t send_proto(const void* const msg,
     pb_ostream_t proto_encoder = pb_ostream_from_buffer(msg_buf, msg_len);
     (void)pb_encode(&proto_encoder, msg_info, msg);
 
-    return httpd_resp_send(req, (char*)msg, msg_len);
+    return httpd_resp_send(req, (char*)msg_buf, proto_encoder.bytes_written);
 }
 
 static esp_err_t receive_proto(void* const msg,
