@@ -6,5 +6,5 @@ package requests;
 
 message WiFiSettings {
     string ssid = 1 [(nanopb).max_size = 33];
-    string password = 2 [(nanopb).max_size = 65];
+    string password = 2 [(nanopb).max_size = 64];
 }
