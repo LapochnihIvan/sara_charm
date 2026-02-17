@@ -27,8 +27,8 @@ static void add_get_handler(server_handle_t server,
                             const char* uri,
                             http_handler_t handler);
 static void add_post_handler(server_handle_t server,
-                            const char* uri,
-                            http_handler_t handler);
+                             const char* uri,
+                             http_handler_t handler);
 static esp_err_t get_index_html_handler(httpd_req_t* req);
 static esp_err_t get_main_wasm_handler(httpd_req_t* req);
 static esp_err_t get_main_js_handler(httpd_req_t* req);
@@ -115,8 +115,8 @@ static void add_get_handler(const server_handle_t server,
 }
 
 static void add_post_handler(const server_handle_t server,
-                            const char* const uri,
-                            const http_handler_t handler)
+                             const char* const uri,
+                             const http_handler_t handler)
 {
     add_handler_impl(server, uri, HTTP_POST, handler);
 }
