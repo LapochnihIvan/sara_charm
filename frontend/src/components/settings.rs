@@ -78,7 +78,7 @@ fn render_wifi_settings_option(title: &str, start_value: String) -> Html {
     html! {
         <>
             <p>{title}</p>
-            <input value={start_value} />
+            <input type="text" value={start_value} />
         </>
     }
 }
