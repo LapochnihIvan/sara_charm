@@ -68,17 +68,10 @@ fn render_wifi_settings(settings: &Vec<u8>) -> Html {
         <>
             <h3 class="settings-header">{"Настройки Wi-Fi"}</h3>
 
-            {render_wifi_settings_option("SSID:", settings.ssid)}
-            {render_wifi_settings_option("Пароль:", settings.password)}
-        </>
-    }
-}
-
-fn render_wifi_settings_option(title: &str, start_value: String) -> Html {
-    html! {
-        <>
-            <p>{title}</p>
-            <input type="text" value={start_value} />
+            <p>{"SSID:"}</p>
+            <input type="text" value={settings.ssid} />
+            <p>{"Пароль:"}</p>
+            <input type="password" value={settings.password} />
         </>
     }
 }
