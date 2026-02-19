@@ -32,6 +32,7 @@ static void add_post_handler(server_handle_t server,
 static esp_err_t get_index_html_handler(httpd_req_t* req);
 static esp_err_t get_main_wasm_handler(httpd_req_t* req);
 static esp_err_t get_main_js_handler(httpd_req_t* req);
+static esp_err_t get_favicon_ico_handler(httpd_req_t* req);
 static esp_err_t get_wifi_settings_handler(httpd_req_t* req);
 static esp_err_t change_wifi_settings_handler(httpd_req_t* req);
 static esp_err_t send_proto(const void* msg,
@@ -48,10 +49,12 @@ static void add_handler_impl(server_handle_t server,
                              const char* uri,
                              httpd_method_t method,
                              http_handler_t handler);
+static esp_err_t get_gzip_file_handler_impl(httpd_req_t* req,
+                                            const char* content_type,
+                                            const embed_file_t* file);
 static esp_err_t get_file_handler_impl(httpd_req_t* req,
                                        const char* content_type,
-                                       const uint8_t* file,
-                                       size_t file_len);
+                                       const embed_file_t* file);
 static bool is_client_accepts_gzip(httpd_req_t* req);
 
 esp_err_t start_server(server_handle_t* const server)
@@ -96,6 +99,7 @@ static esp_err_t start_http_server(server_handle_t* const server)
         get_main_wasm_handler
     );
     add_get_handler(*server, "/sara_charm_frontend.js", get_main_js_handler);
+    add_get_handler(*server, "/favicon.ico", get_favicon_ico_handler);
 
     add_get_handler(*server, "/api/wifi_settings", get_wifi_settings_handler);
     add_post_handler(
@@ -125,11 +129,10 @@ static esp_err_t get_index_html_handler(httpd_req_t* const req)
 {
     EXTERN_EMBED_ARCHIVED_FILE(index, html, gz);
     const embed_file_t index_html = GET_EMBED_ARCHIVED_FILE(index, html, gz);
-    return get_file_handler_impl(
+    return get_gzip_file_handler_impl(
         req,
         "text/html",
-        index_html.data,
-        index_html.len
+        &index_html
     );
 }
 
@@ -138,11 +141,10 @@ static esp_err_t get_main_wasm_handler(httpd_req_t* const req)
     EXTERN_EMBED_ARCHIVED_FILE(sara_charm_frontend_bg, wasm, gz);
     const embed_file_t main_wasm =
         GET_EMBED_ARCHIVED_FILE(sara_charm_frontend_bg, wasm, gz);
-    return get_file_handler_impl(
+    return get_gzip_file_handler_impl(
         req,
         "application/wasm",
-        main_wasm.data,
-        main_wasm.len
+        &main_wasm
     );
 }
 
@@ -151,11 +153,21 @@ static esp_err_t get_main_js_handler(httpd_req_t* const req)
     EXTERN_EMBED_ARCHIVED_FILE(sara_charm_frontend, js, gz);
     const embed_file_t main_js =
         GET_EMBED_ARCHIVED_FILE(sara_charm_frontend, js, gz);
-    return get_file_handler_impl(
+    return get_gzip_file_handler_impl(
         req,
         "application/javascript",
-        main_js.data,
-        main_js.len
+        &main_js
+    );
+}
+
+static esp_err_t get_favicon_ico_handler(httpd_req_t* const req)
+{
+    EXTERN_EMBED_FILE(favicon, ico);
+    const embed_file_t favicon_ico = GET_EMBED_FILE(favicon, ico);
+    return get_file_handler_impl(
+        req,
+        "image/x-icon",
+        &favicon_ico
     );
 }
 
@@ -276,10 +288,9 @@ static void add_handler_impl(const server_handle_t server,
     (void)httpd_register_uri_handler(server, &uri_handler);
 }
 
-static esp_err_t get_file_handler_impl(httpd_req_t* const req,
-                                       const char* const content_type,
-                                       const uint8_t* const file,
-                                       const size_t file_len)
+static esp_err_t get_gzip_file_handler_impl(httpd_req_t* const req,
+                                            const char* const content_type,
+                                            const embed_file_t* const file)
 {
     if (!is_client_accepts_gzip(req))
     {
@@ -290,10 +301,18 @@ static esp_err_t get_file_handler_impl(httpd_req_t* const req,
         );
     }
 
-    httpd_resp_set_type(req, content_type);
     httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
 
-    return httpd_resp_send(req, (const char *)file, file_len);
+    return get_file_handler_impl(req, content_type, file);
+}
+
+static esp_err_t get_file_handler_impl(httpd_req_t* const req,
+                                       const char* const content_type,
+                                       const embed_file_t* const file)
+{
+    (void)httpd_resp_set_type(req, content_type);
+
+    return httpd_resp_send(req, (const char *)file->data, file->len);
 }
 
 static bool is_client_accepts_gzip(httpd_req_t* const req)

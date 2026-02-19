@@ -7,6 +7,7 @@ idf_component_register(
         "${CMAKE_SOURCE_DIR}/frontend/dist/index.html.gz"
         "${CMAKE_SOURCE_DIR}/frontend/dist/sara_charm_frontend.js.gz"
         "${CMAKE_SOURCE_DIR}/frontend/dist/sara_charm_frontend_bg.wasm.gz"
+        "${CMAKE_SOURCE_DIR}/img/favicon.ico"
 )
 
 include(FetchContent)
