@@ -197,7 +197,7 @@ static esp_err_t change_wifi_settings_handler(httpd_req_t* const req)
     uint8_t msg_buf[messages_WiFiSettings_size];
     esp_err_t res = receive_proto(
         (void*)&settings, msg_buf,
-        messages_WiFiSettings_size,
+        req->content_len,
         &messages_WiFiSettings_msg,
         req
     );
