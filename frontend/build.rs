@@ -1,4 +1,7 @@
-use std::{fs::File, io::Write};
+use std::{
+    fs::{self, File},
+    io::Write,
+};
 
 fn main() -> std::io::Result<()> {
     prost_build::compile_protos(
@@ -6,10 +9,36 @@ fn main() -> std::io::Result<()> {
         &["../proto", "../nanopb/generator/proto"],
     )?;
 
-    let path = format!("{}/gear_svg_nested", std::env::var("OUT_DIR").unwrap());
-    let mut gear_svg_file = File::create(path)?;
-    gear_svg_file.write_all(
-        concat!("html_nested!{\n", include_str!("img/gear.svg"), "\n}\n")
-            .as_bytes(),
-    )
+    for img_file in fs::read_dir("img/")? {
+        let img_file = img_file?;
+
+        if let Some(file_name) = img_file.path().file_name().and_then(|name| name.to_str()) {
+            let file_name = file_name.replace('.', "_");
+
+            let content = fs::read_to_string(img_file.path())?;
+
+            let mut out_file = {
+                let out_path = format!(
+                    "{}/{file_name}.rs",
+                    std::env::var("OUT_DIR").unwrap()
+                );
+
+                File::create(out_path)?
+            };
+
+            out_file.write_all(
+                format!(
+                    "pub mod {file_name}{{\n    \
+                        pub fn render() -> yew::Html {{\n        \
+                            yew::html! {{\n\
+                                {content}        \
+                            }}\n    \
+                        }}\n\
+                    }}"
+                )
+                .as_bytes(),
+            )?;
+        }
+    }
+    Ok(())
 }

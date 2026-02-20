@@ -7,8 +7,9 @@ use web_sys::{HtmlInputElement, js_sys};
 
 use prost::Message;
 
-use crate::proto::WiFiSettings as WiFiSettingsMsg;
 use crate::utils::{alert::alert, get_css::get_css};
+use crate::proto::WiFiSettings as WiFiSettingsMsg;
+use crate::img::gear_svg;
 
 #[function_component(Settings)]
 pub fn settings() -> Html {
@@ -32,7 +33,7 @@ pub fn settings() -> Html {
         <div class={style_sheet.get_class_name().to_owned()}>
             <div class="settings-bar" ref={settings_bar}>
                 <div class="gear" onclick={menu_toggle}>
-                    {include!(concat!(env!("OUT_DIR"), "/gear_svg_nested"))}
+                    {gear_svg::render()}
                 </div>
                 if *is_menu_open {
                     <WiFiSettings />

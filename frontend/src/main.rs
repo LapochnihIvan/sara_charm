@@ -1,6 +1,7 @@
 mod components;
-mod proto;
 mod utils;
+mod proto;
+mod img;
 
 use components::app::App;
 
