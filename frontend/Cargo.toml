@@ -13,9 +13,9 @@ opt-level = "z"
 prost-build = "0.14.3"
 
 [dependencies]
-web-sys = { version = "0.3.85", features = ["HtmlInputElement"] }
-gloo-net = "0.6.0"
 yew = { version = "0.22.0", features = ["csr"] }
-yew-hooks = "0.4.2"
-stylist = { version = "0.13.0", features = ["yew", "parser"] }
+yew-hooks = "0.4.7"
+stylist = { version = "0.14.0", features = ["yew", "parser"] }
+web-sys = { version = "0.3.85", features = ["Window", "HtmlInputElement"] }
+gloo-net = "0.6.0"
 prost = "0.14.3"
