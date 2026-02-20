@@ -260,7 +260,7 @@ static esp_err_t receive_proto(void* const msg,
     }
 
     pb_istream_t proto_decoder = pb_istream_from_buffer(msg_buf, msg_len);
-    if (!pb_decode(&proto_decoder, &messages_WiFiSettings_msg, msg))
+    if (!pb_decode(&proto_decoder, msg_info, msg))
     {
         ESP_TRY(httpd_resp_send_err(
             req,
