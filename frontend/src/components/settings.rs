@@ -7,9 +7,9 @@ use web_sys::{HtmlInputElement, js_sys};
 
 use prost::Message;
 
-use crate::utils::{alert::alert, get_css::get_css};
-use crate::proto::WiFiSettings as WiFiSettingsMsg;
 use crate::img::gear_svg;
+use crate::proto::WiFiSettings as WiFiSettingsMsg;
+use crate::utils::{alert::alert, get_css::get_css};
 
 #[function_component(Settings)]
 pub fn settings() -> Html {
@@ -102,7 +102,7 @@ fn wifi_settings_menu(props: &WiFiSettingsMenuProps) -> Html {
                 password: get_input_value(&password_input),
             };
 
-            send_wifi_settings(new_settings.encode_to_vec())
+            send_wifi_settings(&new_settings)
                 .await
                 .map(|_| new_settings)
         })
@@ -161,8 +161,10 @@ fn wifi_settings_menu(props: &WiFiSettingsMenuProps) -> Html {
     }
 }
 
-async fn send_wifi_settings(settings: Vec<u8>) -> Result<(), String> {
-    let settings = js_sys::Uint8Array::from(settings.as_slice());
+async fn send_wifi_settings(settings: &WiFiSettingsMsg) -> Result<(), String> {
+    let settings = js_sys::Uint8Array::from(
+        settings.encode_to_vec().as_slice(),
+    );
     match Request::post(WIFI_SETTINGS_API)
         .body(settings)
         .unwrap()
