@@ -23,6 +23,8 @@ FetchContent_Populate(
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/nanopb/extra")
 find_package(Nanopb REQUIRED)
 
+set(NANOPB_OPTIONS "-s proto3:true")
+
 nanopb_generate_cpp(TARGET proto ${CMAKE_SOURCE_DIR}/proto/messages.proto)
 
 target_link_libraries(${COMPONENT_LIB} PRIVATE proto)
