@@ -122,7 +122,7 @@ static esp_err_t init_netif(void)
 }
 
 #define CONFIG_WIFI_DEFAULT_PASSWORD_LEN (sizeof(CONFIG_WIFI_DEFAULT_PASSWORD))
-#include "esp_log.h"
+
 static esp_err_t start_wifi(void)
 {
     wifi_init_config_t init_config = WIFI_INIT_CONFIG_DEFAULT();
@@ -165,8 +165,6 @@ static esp_err_t start_wifi(void)
 
         nvs_close(nvs_handle);
     }
-
-    ESP_LOGW(__FUNCTION__, "Password: %s", config.ap.password);
 
     ESP_TRY(esp_wifi_set_config(WIFI_IF_AP, &config));
 
