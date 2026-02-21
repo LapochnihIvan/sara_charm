@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+import "nanopb.proto";
+
+package settings;
+
+message WiFiSettings {
+    string ssid = 1 [(nanopb).max_length = 32];
+    string password = 2 [(nanopb).max_length = 63];
+}
