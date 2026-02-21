@@ -14,7 +14,7 @@
 #include "utils/embed_file.h"
 #include "utils/esp_try.h"
 
-#include "messages.pb.h"
+#include "settings.pb.h"
 
 
 #define ACCEPT_ENCODING_BUF_LEN (32)
@@ -174,32 +174,32 @@ static esp_err_t get_favicon_ico_handler(httpd_req_t* const req)
 
 static esp_err_t get_wifi_settings_handler(httpd_req_t* const req)
 {
-    messages_WiFiSettings settings;
+    settings_WiFiSettings settings;
     wifi_point_get_settings(settings.ssid, settings.password);
 
-    uint8_t msg_buf[messages_WiFiSettings_size];
+    uint8_t msg_buf[settings_WiFiSettings_size];
     return send_proto(
         (void*)&settings,
         msg_buf,
-        messages_WiFiSettings_size,
-        &messages_WiFiSettings_msg,
+        settings_WiFiSettings_size,
+        &settings_WiFiSettings_msg,
         req
     );
 }
 
 static esp_err_t change_wifi_settings_handler(httpd_req_t* const req)
 {
-    if (req->content_len > messages_WiFiSettings_size)
+    if (req->content_len > settings_WiFiSettings_size)
     {
         httpd_resp_send_err(req, HTTPD_413_CONTENT_TOO_LARGE, NULL);
     }
 
-    messages_WiFiSettings settings;
-    uint8_t msg_buf[messages_WiFiSettings_size];
+    settings_WiFiSettings settings;
+    uint8_t msg_buf[settings_WiFiSettings_size];
     esp_err_t res = receive_proto(
         (void*)&settings, msg_buf,
         req->content_len,
-        &messages_WiFiSettings_msg,
+        &settings_WiFiSettings_msg,
         req
     );
     if (res != ESP_OK)

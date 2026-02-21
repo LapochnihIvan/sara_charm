@@ -5,7 +5,7 @@ use std::{
 
 fn main() -> std::io::Result<()> {
     prost_build::compile_protos(
-        &["../proto/messages.proto"],
+        &["../proto/settings.proto"],
         &["../proto", "../nanopb/generator/proto"],
     )?;
 

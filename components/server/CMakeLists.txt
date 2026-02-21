@@ -25,7 +25,7 @@ find_package(Nanopb REQUIRED)
 
 set(NANOPB_OPTIONS "-s proto3:true")
 
-nanopb_generate_cpp(TARGET proto ${CMAKE_SOURCE_DIR}/proto/messages.proto)
+nanopb_generate_cpp(TARGET proto ${CMAKE_SOURCE_DIR}/proto/settings.proto)
 
 target_link_libraries(${COMPONENT_LIB} PRIVATE proto)
 
