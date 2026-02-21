@@ -1,0 +1,25 @@
+.circle-label {
+    width: 1.9rem;
+    height: 1.9rem;
+    border: 2px solid #000;
+    border-radius: 50%;
+    display: inline-block;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.circle-label:hover {
+    background-color: #DDD;
+}
+
+.circle-checkbox {
+    display: none;
+}
+
+.circle-label:has(.circle-checkbox:checked) {
+    background-color: #333;
+}
+
+.circle-label:has(.circle-checkbox:checked):hover {
+    background-color: #555;
+}

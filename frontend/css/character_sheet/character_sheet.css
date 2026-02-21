@@ -1,0 +1,23 @@
+.character-sheet {
+    width: 63rem;
+    background: #FFF;
+    border: 2px solid #000;
+    padding: 15px;
+    font-family: 'Times New Roman', Times, serif;
+    font-weight: bold;
+}
+
+.text-input {
+    border: none;
+    border-bottom: 1px solid #000;
+    background: transparent;
+    font-family: inherit;
+    font-size: 0.875rem;
+    padding: 0.12rem 0.32rem;
+    flex: 1;
+}
+
+.text-input:focus {
+    outline: none;
+    background: #F5F5DC;
+}

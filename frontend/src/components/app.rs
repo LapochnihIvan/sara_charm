@@ -1,6 +1,7 @@
 use yew::prelude::*;
 
 use super::settings::Settings;
+use super::character_sheet::CharacterSheet;
 
 use crate::utils::get_css::get_css_global;
 
@@ -14,6 +15,9 @@ pub fn app() -> Html {
     html! {
         <>
             <Settings />
+            <main>
+                <CharacterSheet />
+            </main>
             <footer>
                 <a href={SOURCE_CODE_LINK} target="_blank">{"Исходный код"}</a>
             </footer>

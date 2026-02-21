@@ -1,0 +1,35 @@
+.header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20rem;
+    border: 1px solid #000;
+    padding: 0.5rem;
+    margin-bottom: 0.6rem;
+}
+
+.person-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.person-info div {
+    display: flex;
+    align-items: center;
+    gap: 0.32rem;
+}
+
+.person-info span {
+    width: 4rem;
+}
+
+.wounds {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.wounds-circles div {
+    display: flex;
+    gap: 0.6rem;
+}
