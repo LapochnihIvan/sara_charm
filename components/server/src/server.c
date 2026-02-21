@@ -206,25 +206,32 @@ static esp_err_t change_wifi_settings_handler(httpd_req_t* const req)
         return ESP_OK;
     }
 
-    res = wifi_point_change_settings(
-        settings.ssid,
-        strlen(settings.ssid),
-        settings.password,
-        strlen(settings.password)
-    );
+    const uint8_t ssid_len = (uint8_t)strlen(settings.ssid);
+    const uint8_t password_len = (uint8_t)strlen(settings.password);
+    res = wifi_point_validate_settings(ssid_len, password_len);
 
-    if (res != ESP_OK)
+    if (res == ESP_OK)
     {
-        return httpd_resp_send_err(
-            req,
-            res == ESP_ERR_WIFI_PASSWORD ? 
-                HTTPD_400_BAD_REQUEST :
-                HTTPD_500_INTERNAL_SERVER_ERROR, 
-            esp_err_to_name(res)
+        (void)httpd_resp_set_status(req, "202 Accepted");
+        res = httpd_resp_send(req, NULL, 0);
+
+        wifi_point_change_settings(
+            settings.ssid,
+            ssid_len,
+            settings.password, 
+            password_len
         );
+
+        return res;
     }
 
-    return httpd_resp_send(req, NULL, 0);
+    return httpd_resp_send_err(
+        req,
+        res == ESP_ERR_WIFI_PASSWORD ? 
+            HTTPD_400_BAD_REQUEST :
+            HTTPD_500_INTERNAL_SERVER_ERROR, 
+        esp_err_to_name(res)
+    );
 }
 
 static esp_err_t send_proto(const void* const msg,

@@ -9,6 +9,9 @@
 
 #define CHANNEL_NUM (6)
 
+#define MIN_SSID_LEN       (1)
+#define MIN_PASSPHRASE_LEN (8)
+
 #define NVS_NAMESPACE ("wifi")
 #define NVS_SSID_KEY ("ssid")
 #define NVS_PASSWORD_KEY ("pwd")
@@ -61,10 +64,28 @@ void wifi_point_get_settings(char* const ssid, char* const password)
     strlcpy(password, (char*)config.ap.password, MAX_PASSPHRASE_LEN);
 }
 
-esp_err_t wifi_point_change_settings(const char* const ssid,
-                                     const uint8_t ssid_len,
-                                     const char* const password,
-                                     const uint8_t password_len)
+esp_err_t wifi_point_validate_settings(const uint8_t ssid_len,
+                                       const uint8_t password_len)
+{
+    if (ssid_len < MIN_SSID_LEN || ssid_len > MAX_SSID_LEN)
+    {
+        return ESP_ERR_WIFI_SSID;
+    }
+
+    if (password_len > 0
+        && (password_len < MIN_PASSPHRASE_LEN
+            || password_len > MIN_PASSPHRASE_LEN))
+    {
+        return ESP_ERR_WIFI_PASSWORD;
+    }
+
+    return ESP_OK;
+}
+
+void wifi_point_change_settings(const char* const ssid,
+                                const uint8_t ssid_len,
+                                const char* const password,
+                                const uint8_t password_len)
 {
     wifi_config_t config;
     (void)esp_wifi_get_config(ESP_IF_WIFI_AP, &config);
@@ -77,21 +98,20 @@ esp_err_t wifi_point_change_settings(const char* const ssid,
     config.ap.authmode = get_auth_mode(password_len);
 
     nvs_handle_t nvs_handle;
-    ESP_TRY(nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs_handle));
-
-    esp_err_t res = save_ssid(nvs_handle, ssid, ssid_len);
-    if (res == ESP_OK)
+    if (nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs_handle) == ESP_OK)
     {
-        res = save_password(nvs_handle, password, password_len);
+        esp_err_t res = save_ssid(nvs_handle, ssid, ssid_len);
+        if (res == ESP_OK)
+        {
+            (void)save_password(nvs_handle, password, password_len);
+        }
+
+        nvs_close(nvs_handle);
     }
-
-    nvs_close(nvs_handle);
-
-    ESP_TRY(res);
 
     deauth_all_users();
 
-    return esp_wifi_set_config(ESP_IF_WIFI_AP, &config);
+    (void)esp_wifi_set_config(ESP_IF_WIFI_AP, &config);
 }
 
 static esp_err_t init_netif(void)
@@ -102,7 +122,7 @@ static esp_err_t init_netif(void)
 }
 
 #define CONFIG_WIFI_DEFAULT_PASSWORD_LEN (sizeof(CONFIG_WIFI_DEFAULT_PASSWORD))
-
+#include "esp_log.h"
 static esp_err_t start_wifi(void)
 {
     wifi_init_config_t init_config = WIFI_INIT_CONFIG_DEFAULT();
@@ -142,9 +162,11 @@ static esp_err_t start_wifi(void)
             config.ap.password[len] = '\0';
             config.ap.authmode = get_auth_mode((uint8_t)len);
         }
+
+        nvs_close(nvs_handle);
     }
 
-    nvs_close(nvs_handle);
+    ESP_LOGW(__FUNCTION__, "Password: %s", config.ap.password);
 
     ESP_TRY(esp_wifi_set_config(WIFI_IF_AP, &config));
 

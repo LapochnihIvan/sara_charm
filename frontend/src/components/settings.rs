@@ -174,7 +174,7 @@ async fn send_wifi_settings(settings: &WiFiSettingsMsg) -> Result<(), String> {
         Ok(resp) => {
             let status = resp.status();
             match status {
-                200 => Ok(()),
+                202 => Ok(()),
                 400 => Err(format!(
                     "Ошибка установки настроек Wi-Fi: {}",
                     resp.text().await.unwrap_or_default()

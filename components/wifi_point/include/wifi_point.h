@@ -13,10 +13,12 @@ typedef struct wifi_point
 esp_err_t wifi_point_start(wifi_point_t* self);
 void wifi_point_stop(wifi_point_t* self);
 void wifi_point_get_settings(char* ssid, char* password);
-esp_err_t wifi_point_change_settings(const char* ssid,
-                                     uint8_t ssid_len,
-                                     const char* password,
-                                     uint8_t password_len);
+esp_err_t wifi_point_validate_settings(uint8_t ssid_len,
+                                       uint8_t password_len);
+void wifi_point_change_settings(const char* ssid,
+                                uint8_t ssid_len,
+                                const char* password,
+                                uint8_t password_len);
 
 
 #endif //!SARA_CHARM_SERVER_WIFI_POINT_H
