@@ -125,6 +125,8 @@ fn wifi_settings_menu(props: &WiFiSettingsMenuProps) -> Html {
 
             if let Some(new_settings) = send_settings.data.as_ref() {
                 settings.set(new_settings.into());
+
+                alert("Необходимо переподключить к Wi-Fi");
             } else if let Some(e) = send_settings.error.as_ref() {
                 alert(&e);
 
