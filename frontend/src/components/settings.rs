@@ -30,7 +30,7 @@ pub fn settings() -> Html {
     });
 
     html! {
-        <div class={style_sheet.get_class_name().to_owned()}>
+        <div class={style_sheet}>
             <div class="settings-bar" ref={settings_bar}>
                 <div class="gear" onclick={menu_toggle}>
                     {gear_svg::render()}
