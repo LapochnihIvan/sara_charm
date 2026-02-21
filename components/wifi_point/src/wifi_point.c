@@ -25,6 +25,7 @@ static esp_err_t load_ssid(nvs_handle_t nvs_handle, uint8_t* dest, size_t* len);
 static esp_err_t load_password(nvs_handle_t nvs_handle,
                                uint8_t* dest,
                                size_t* len);
+static inline wifi_auth_mode_t get_auth_mode(uint8_t password_len);
 static inline void deauth_all_users(void);
 
 esp_err_t wifi_point_start(wifi_point_t* const self)
@@ -73,6 +74,7 @@ esp_err_t wifi_point_change_settings(const char* const ssid,
 
     memcpy((void*)config.ap.password, (const void*)password, password_len);
     config.ap.password[password_len] = '\0';
+    config.ap.authmode = get_auth_mode(password_len);
 
     nvs_handle_t nvs_handle;
     ESP_TRY(nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs_handle));
@@ -99,6 +101,8 @@ static esp_err_t init_netif(void)
     return esp_event_loop_create_default();
 }
 
+#define CONFIG_WIFI_DEFAULT_PASSWORD_LEN (sizeof(CONFIG_WIFI_DEFAULT_PASSWORD))
+
 static esp_err_t start_wifi(void)
 {
     wifi_init_config_t init_config = WIFI_INIT_CONFIG_DEFAULT();
@@ -116,7 +120,9 @@ static esp_err_t start_wifi(void)
 #endif //CONFIG_WIFI_HIDDEN
             .password = CONFIG_WIFI_DEFAULT_PASSWORD,
             .max_connection = 1,
-            .authmode = WIFI_AUTH_WPA_WPA2_PSK,
+            .authmode = get_auth_mode(
+                (uint8_t)(sizeof(CONFIG_WIFI_DEFAULT_PASSWORD) - 1)
+            ),
             .pmf_cfg = {
                 .required = false,
             },
@@ -134,6 +140,7 @@ static esp_err_t start_wifi(void)
         if (load_password(nvs_handle, config.ap.password, &len) == ESP_OK)
         {
             config.ap.password[len] = '\0';
+            config.ap.authmode = get_auth_mode((uint8_t)len);
         }
     }
 
@@ -172,6 +179,11 @@ static esp_err_t load_password(const nvs_handle_t nvs_handle,
 {
     *len = MAX_PASSPHRASE_LEN;
     return nvs_get_blob(nvs_handle, NVS_PASSWORD_KEY, (void*)dest, len);
+}
+
+static inline wifi_auth_mode_t get_auth_mode(const uint8_t password_len)
+{
+    return password_len > 0 ? WIFI_AUTH_WPA_WPA2_PSK : WIFI_AUTH_OPEN;
 }
 
 static inline void deauth_all_users(void)
