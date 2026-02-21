@@ -45,6 +45,7 @@ static esp_err_t receive_proto(void* msg,
                                size_t msg_len,
                                const pb_msgdesc_t* msg_info,
                                httpd_req_t* req);
+static void close_http_connection(httpd_req_t* req);
 static void add_handler_impl(server_handle_t server,
                              const char* uri,
                              httpd_method_t method,
@@ -213,7 +214,10 @@ static esp_err_t change_wifi_settings_handler(httpd_req_t* const req)
     if (res == ESP_OK)
     {
         (void)httpd_resp_set_status(req, "202 Accepted");
+        (void)httpd_resp_set_hdr(req, "Connection", "close");
         res = httpd_resp_send(req, NULL, 0);
+
+        close_http_connection(req);
 
         wifi_point_change_settings(
             settings.ssid,
@@ -225,13 +229,21 @@ static esp_err_t change_wifi_settings_handler(httpd_req_t* const req)
         return res;
     }
 
-    return httpd_resp_send_err(
-        req,
-        res == ESP_ERR_WIFI_PASSWORD ? 
-            HTTPD_400_BAD_REQUEST :
-            HTTPD_500_INTERNAL_SERVER_ERROR, 
-        esp_err_to_name(res)
-    );
+    if (res == ESP_ERR_WIFI_SSID)
+    {
+        return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Invalid SSID");
+    }
+    
+    if (res == ESP_ERR_WIFI_PASSWORD)
+    {
+        return httpd_resp_send_err(
+            req,
+            HTTPD_400_BAD_REQUEST,
+            "Invalid password"
+        );
+    }
+
+    return res;
 }
 
 static esp_err_t send_proto(const void* const msg,
@@ -279,6 +291,11 @@ static esp_err_t receive_proto(void* const msg,
     }
 
     return ESP_OK;
+}
+
+static void close_http_connection(httpd_req_t* const req)
+{
+    (void)httpd_sess_trigger_close(req->handle, httpd_req_to_sockfd(req));
 }
 
 static void add_handler_impl(const server_handle_t server,
