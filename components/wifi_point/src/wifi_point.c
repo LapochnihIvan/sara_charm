@@ -74,7 +74,7 @@ esp_err_t wifi_point_validate_settings(const uint8_t ssid_len,
 
     if (password_len > 0
         && (password_len < MIN_PASSPHRASE_LEN
-            || password_len > MIN_PASSPHRASE_LEN))
+            || password_len > MAX_PASSPHRASE_LEN))
     {
         return ESP_ERR_WIFI_PASSWORD;
     }
