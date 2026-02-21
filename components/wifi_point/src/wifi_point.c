@@ -121,8 +121,6 @@ static esp_err_t init_netif(void)
     return esp_event_loop_create_default();
 }
 
-#define CONFIG_WIFI_DEFAULT_PASSWORD_LEN (sizeof(CONFIG_WIFI_DEFAULT_PASSWORD))
-
 static esp_err_t start_wifi(void)
 {
     wifi_init_config_t init_config = WIFI_INIT_CONFIG_DEFAULT();
