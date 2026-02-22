@@ -7,6 +7,8 @@
 
 #include <mdns.h>
 
+#include <nvs_flash.h>
+
 #include <pb_encode.h>
 #include <pb_decode.h>
 
@@ -15,9 +17,12 @@
 #include "utils/esp_try.h"
 
 #include "settings.pb.h"
+#include "char_sheet.pb.h"
 
 
 #define ACCEPT_ENCODING_BUF_LEN (32)
+
+#define NVS_NAMESPACE ("char_sheet")
 
 typedef esp_err_t (*http_handler_t)(httpd_req_t*);
 
@@ -35,6 +40,7 @@ static esp_err_t get_main_js_handler(httpd_req_t* req);
 static esp_err_t get_favicon_ico_handler(httpd_req_t* req);
 static esp_err_t get_wifi_settings_handler(httpd_req_t* req);
 static esp_err_t change_wifi_settings_handler(httpd_req_t* req);
+static esp_err_t save_woods_points_handler(httpd_req_t* req);
 static esp_err_t send_proto(const void* msg,
                             uint8_t* msg_buf,
                             size_t msg_len,
@@ -46,6 +52,7 @@ static esp_err_t receive_proto(void* msg,
                                const pb_msgdesc_t* msg_info,
                                httpd_req_t* req);
 static void close_http_connection(httpd_req_t* req);
+static esp_err_t save_data(const char* key, const void* data, size_t data_len);
 static void add_handler_impl(server_handle_t server,
                              const char* uri,
                              httpd_method_t method,
@@ -90,7 +97,7 @@ static esp_err_t start_mdns_server(void)
 static esp_err_t start_http_server(server_handle_t* const server)
 {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    
+
     ESP_TRY(httpd_start(server, &config));
 
     add_get_handler(*server, "/", get_index_html_handler);
@@ -108,6 +115,8 @@ static esp_err_t start_http_server(server_handle_t* const server)
         "/api/wifi_settings",
         change_wifi_settings_handler
     );
+
+    add_post_handler(*server, "/api/woods", save_woods_points_handler);
 
     return ESP_OK;
 }
@@ -189,16 +198,11 @@ static esp_err_t get_wifi_settings_handler(httpd_req_t* const req)
 
 static esp_err_t change_wifi_settings_handler(httpd_req_t* const req)
 {
-    if (req->content_len > settings_WiFiSettings_size)
-    {
-        httpd_resp_send_err(req, HTTPD_413_CONTENT_TOO_LARGE, NULL);
-    }
-
     settings_WiFiSettings settings;
     uint8_t msg_buf[settings_WiFiSettings_size];
     esp_err_t res = receive_proto(
         (void*)&settings, msg_buf,
-        req->content_len,
+        settings_WiFiSettings_size,
         &settings_WiFiSettings_msg,
         req
     );
@@ -246,6 +250,33 @@ static esp_err_t change_wifi_settings_handler(httpd_req_t* const req)
     return res;
 }
 
+static esp_err_t save_woods_points_handler(httpd_req_t* const req)
+{
+    char_sheet_Wounds wounds;
+    uint8_t msg_buf[char_sheet_Wounds_size];
+    esp_err_t res = receive_proto(
+        (void*)&wounds, msg_buf,
+        char_sheet_Wounds_size,
+        &char_sheet_Wounds_msg,
+        req
+    );
+    if (res != ESP_OK)
+    {
+        return ESP_OK;
+    }
+
+    if (save_data(
+        "wounds",
+        (void*)&wounds.num_points,
+        sizeof(uint32_t)
+    ) == ESP_OK)
+    {
+        return httpd_resp_send(req, NULL, 0);
+    }
+
+    return httpd_resp_send_500(req);
+}
+
 static esp_err_t send_proto(const void* const msg,
                             uint8_t* const msg_buf,
                             const size_t msg_len,
@@ -264,6 +295,11 @@ static esp_err_t receive_proto(void* const msg,
                                const pb_msgdesc_t* const msg_info,
                                httpd_req_t* const req)
 {
+    if (req->content_len > msg_len)
+    {
+        httpd_resp_send_err(req, HTTPD_413_CONTENT_TOO_LARGE, NULL);
+    }
+
     const int receive_res = httpd_req_recv(req, (char*)msg_buf, msg_len);
     if (receive_res == HTTPD_SOCK_ERR_TIMEOUT)
     {
@@ -278,7 +314,8 @@ static esp_err_t receive_proto(void* const msg,
         return ESP_FAIL;
     }
 
-    pb_istream_t proto_decoder = pb_istream_from_buffer(msg_buf, msg_len);
+    pb_istream_t proto_decoder =
+        pb_istream_from_buffer(msg_buf, req->content_len);
     if (!pb_decode(&proto_decoder, msg_info, msg))
     {
         ESP_TRY(httpd_resp_send_err(
@@ -296,6 +333,18 @@ static esp_err_t receive_proto(void* const msg,
 static void close_http_connection(httpd_req_t* const req)
 {
     (void)httpd_sess_trigger_close(req->handle, httpd_req_to_sockfd(req));
+}
+
+static esp_err_t save_data(const char* const key,
+                           const void* const data,
+                           const size_t data_len)
+{
+    nvs_handle_t nvs_handle;
+    ESP_TRY(nvs_open(NVS_NAMESPACE, NVS_READWRITE, &nvs_handle));
+    ESP_TRY(nvs_set_blob(nvs_handle, key, data, data_len));
+    nvs_close(nvs_handle);
+
+    return ESP_OK;
 }
 
 static void add_handler_impl(const server_handle_t server,

@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+import "nanopb.proto";
+
+package char_sheet;
+
+message Woods {
+    uint32 num_points = 1;
+}

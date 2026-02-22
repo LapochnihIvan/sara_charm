@@ -2,7 +2,7 @@ idf_component_register(
     SRCS "src/server.c"
     INCLUDE_DIRS "include"
     REQUIRES "esp_http_server"
-    PRIV_REQUIRES "esp_wifi" "esp_netif" "wifi_point" "utils"
+    PRIV_REQUIRES "wifi_point" "nvs_flash" "utils"
     EMBED_FILES
         "${CMAKE_SOURCE_DIR}/frontend/dist/index.html.gz"
         "${CMAKE_SOURCE_DIR}/frontend/dist/sara_charm_frontend.js.gz"
@@ -25,7 +25,11 @@ find_package(Nanopb REQUIRED)
 
 set(NANOPB_OPTIONS "-s proto3:true")
 
-nanopb_generate_cpp(TARGET proto ${CMAKE_SOURCE_DIR}/proto/settings.proto)
+nanopb_generate_cpp(
+    TARGET proto
+    "${CMAKE_SOURCE_DIR}/proto/settings.proto"
+    "${CMAKE_SOURCE_DIR}/proto/char_sheet.proto"
+)
 
 target_link_libraries(${COMPONENT_LIB} PRIVATE proto)
 
