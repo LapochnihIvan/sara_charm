@@ -4,6 +4,6 @@ import "nanopb.proto";
 
 package char_sheet;
 
-message Woods {
+message Wounds {
     uint32 num_points = 1;
 }
